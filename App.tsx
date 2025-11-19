@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Onboarding } from './components/Onboarding';
 import { ChatInterface } from './components/ChatInterface';
 import { Relaxation } from './components/Relaxation';
@@ -121,72 +122,74 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-green-50 text-slate-800 overflow-hidden relative font-sans">
-      
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-hidden relative">
-        {currentView === 'onboarding' && (
-          <Onboarding onLogin={handleLogin} />
+    <GoogleOAuthProvider clientId="1030781750444-nrlbs7snd6giai42a6dalghf6tlpgmci.apps.googleusercontent.com">
+      <div className="h-screen w-full flex flex-col bg-green-50 text-slate-800 overflow-hidden relative font-sans">
+        
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-hidden relative">
+          {currentView === 'onboarding' && (
+            <Onboarding onLogin={handleLogin} />
+          )}
+
+          {currentView === 'chat' && user && (
+            <ChatInterface 
+              key={activeSessionId || 'new'} // Force remount on session change
+              user={user} 
+              initialMessages={getInitialMessages()}
+              onEmergency={triggerEmergency}
+              onSessionUpdate={handleSessionUpdate}
+              sessionId={activeSessionId}
+            />
+          )}
+
+          {currentView === 'history' && user && (
+            <ChatHistory 
+              sessions={chatSessions}
+              onSelectSession={handleSelectSession}
+              onDeleteSession={handleDeleteSession}
+              onNewChat={handleNewChat}
+              language={user.language}
+            />
+          )}
+
+          {currentView === 'relaxation' && user && (
+            <Relaxation language={user.language} />
+          )}
+
+          {currentView === 'settings' && user && (
+            <UserProfileComponent 
+              user={user} 
+              onUpdate={handleUpdateUser}
+              onLogout={handleLogout}
+              onNavigate={setCurrentView}
+            />
+          )}
+
+          {currentView === 'whatsapp-coming-soon' && user && (
+            <ComingSoon 
+              language={user.language}
+              onNavigate={setCurrentView}
+            />
+          )}
+        </main>
+
+        {/* Emergency Overlay Modal */}
+        {showEmergency && user && (
+          <div className="absolute inset-0 z-50 bg-white">
+             <Emergency onClose={() => setShowEmergency(false)} language={user.language} />
+          </div>
         )}
 
-        {currentView === 'chat' && user && (
-          <ChatInterface 
-            key={activeSessionId || 'new'} // Force remount on session change
-            user={user} 
-            initialMessages={getInitialMessages()}
-            onEmergency={triggerEmergency}
-            onSessionUpdate={handleSessionUpdate}
-            sessionId={activeSessionId}
-          />
-        )}
-
-        {currentView === 'history' && user && (
-          <ChatHistory 
-            sessions={chatSessions}
-            onSelectSession={handleSelectSession}
-            onDeleteSession={handleDeleteSession}
-            onNewChat={handleNewChat}
+        {/* Navigation Bar - Only show if logged in and not in onboarding or fullscreen feature views */}
+        {currentView !== 'onboarding' && !showEmergency && currentView !== 'whatsapp-coming-soon' && user && (
+          <Navigation 
+            currentView={currentView} 
+            onChangeView={setCurrentView} 
+            onTriggerEmergency={triggerEmergency}
             language={user.language}
           />
         )}
-
-        {currentView === 'relaxation' && user && (
-          <Relaxation language={user.language} />
-        )}
-
-        {currentView === 'settings' && user && (
-          <UserProfileComponent 
-            user={user} 
-            onUpdate={handleUpdateUser}
-            onLogout={handleLogout}
-            onNavigate={setCurrentView}
-          />
-        )}
-
-        {currentView === 'whatsapp-coming-soon' && user && (
-          <ComingSoon 
-            language={user.language}
-            onNavigate={setCurrentView}
-          />
-        )}
-      </main>
-
-      {/* Emergency Overlay Modal */}
-      {showEmergency && user && (
-        <div className="absolute inset-0 z-50 bg-white">
-           <Emergency onClose={() => setShowEmergency(false)} language={user.language} />
-        </div>
-      )}
-
-      {/* Navigation Bar - Only show if logged in and not in onboarding or fullscreen feature views */}
-      {currentView !== 'onboarding' && !showEmergency && currentView !== 'whatsapp-coming-soon' && user && (
-        <Navigation 
-          currentView={currentView} 
-          onChangeView={setCurrentView} 
-          onTriggerEmergency={triggerEmergency}
-          language={user.language}
-        />
-      )}
-    </div>
+      </div>
+    </GoogleOAuthProvider>
   );
 }

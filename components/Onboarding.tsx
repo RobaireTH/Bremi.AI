@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile, Language } from '../types';
 import { Icons, SUPPORTED_LANGUAGES, TRANSLATIONS } from '../constants';
+import { GoogleSignIn } from './GoogleSignIn';
 
 interface OnboardingProps {
   onLogin: (user: UserProfile) => void;
@@ -12,19 +13,17 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onLogin }) => {
 
   const t = TRANSLATIONS[selectedLanguage];
 
-  const handleGoogleLogin = () => {
+  const handleLoginSuccess = (googleUser: Partial<UserProfile>) => {
     setIsAnimating(true);
-    // Simulate API call
-    setTimeout(() => {
-      const mockUser: UserProfile = {
-        id: 'user-' + Date.now(),
-        name: 'Naija Padi',
-        email: 'user@example.com',
-        language: selectedLanguage,
-        preferences: { saveHistory: false }
-      };
-      onLogin(mockUser);
-    }, 1500);
+    // Merge google user with defaults
+    const newUser: UserProfile = {
+      id: googleUser.id || 'user-' + Date.now(),
+      name: googleUser.name || 'User',
+      email: googleUser.email,
+      language: selectedLanguage,
+      preferences: { saveHistory: false }
+    };
+    onLogin(newUser);
   };
 
   return (
@@ -65,20 +64,9 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onLogin }) => {
             ))}
           </div>
 
-          <button 
-            onClick={handleGoogleLogin}
-            disabled={isAnimating}
-            className="w-full bg-white hover:bg-gray-50 text-slate-700 font-medium py-3 px-4 rounded-xl shadow-md border border-gray-200 flex items-center justify-center transition-all transform active:scale-95"
-          >
-            {isAnimating ? (
-              <span className="animate-pulse">Signing in...</span>
-            ) : (
-              <>
-                <Icons.Google className="mr-3" />
-                {t.signin}
-              </>
-            )}
-          </button>
+          <div className="w-full flex justify-center">
+             <GoogleSignIn onLoginSuccess={handleLoginSuccess} />
+          </div>
           
           <div className="text-xs text-center text-slate-400 mt-4 px-4">
             By signing up, you agree that this is an AI companion, not a replacement for professional medical help.
