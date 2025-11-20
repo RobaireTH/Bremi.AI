@@ -5,3 +5,4 @@ apscheduler
 google-genai
 python-dotenv
 pydantic
+requests

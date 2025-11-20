@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ChatSession, Message } from '../types';
+import { syncChatHistory } from '../services/apiService';
+import { useUser } from './UserContext';
 
 interface SessionContextType {
     sessions: ChatSession[];
@@ -16,6 +18,7 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+    const { user } = useUser();
 
     useEffect(() => {
         const storedSessions = localStorage.getItem('bremiAI_sessions');
@@ -50,6 +53,12 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
             localStorage.setItem('bremiAI_sessions', JSON.stringify(newSessions));
             return newSessions;
         });
+
+        // Sync with backend if user is logged in
+        if (user && user.id) {
+            // Fire and forget - don't await
+            syncChatHistory(user.id, messages);
+        }
     };
 
     const selectSession = (sessionId: string) => {

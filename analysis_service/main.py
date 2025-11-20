@@ -1,18 +1,34 @@
 import uvicorn
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 from typing import List, Dict
+import os
 
 from database import SessionLocal, engine, init_db, ScheduledFollowUp
 from analyzer import ContextAnalyzer
+from risk_model import RiskAnalysisModel
+from email_service import BrevoEmailService
 
 # Initialize DB
 init_db()
 
 app = FastAPI(title="Bremi Memory Service")
+
+# CORS Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Allow frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 analyzer = ContextAnalyzer()
+risk_analyzer = RiskAnalysisModel()
+email_service = BrevoEmailService()
 
 # Dependency
 def get_db():
@@ -36,13 +52,34 @@ def check_for_due_followups():
         ).all()
 
         for item in due_items:
-            print(f"📧 [MOCK EMAIL SENT] To User {item.user_id}:")
-            print(f"   Subject: Checking in on {item.topic}")
-            print(f"   Body: {item.email_content}")
-            print("-" * 30)
+            log_msg = f"""
+--------------------------------------------------
+[EMAIL TRIGGERED] {datetime.now()}
+To User: {item.user_id} ({item.user_email})
+Topic: {item.topic}
+--------------------------------------------------
+"""
+            print(log_msg)
             
-            # Mark as sent
-            item.status = "sent"
+            # Send via Brevo
+            if item.user_email:
+                success = email_service.send_checkup_email(
+                    to_email=item.user_email,
+                    name="Friend", # Could be improved if we stored name
+                    topic=item.topic,
+                    content=item.email_content
+                )
+                if success:
+                    item.status = "sent"
+                else:
+                    item.status = "failed"
+            else:
+                print("No email address found for user.")
+                item.status = "failed_no_email"
+            
+            # Log to file for demo purposes
+            with open("sent_emails.log", "a", encoding="utf-8") as f:
+                f.write(log_msg)
         
         db.commit()
     except Exception as e:
@@ -52,46 +89,70 @@ def check_for_due_followups():
 
 # Start Scheduler
 scheduler = BackgroundScheduler()
-scheduler.add_job(check_for_due_followups, 'interval', hours=1) # Checks every hour
+scheduler.add_job(check_for_due_followups, 'interval', seconds=30) # Check every 30s for demo
 scheduler.start()
 
 # --- API Endpoints ---
+
+@app.get("/")
+def health_check():
+    return {"status": "ok", "service": "Bremi Memory Service"}
 
 @app.post("/sync-chat")
 def sync_chat_history(
     user_id: str, 
     history: List[Dict[str, str]], 
+    user_email: str = None, # Optional email
     db: Session = Depends(get_db)
 ):
     """
-    Ingests chat history, analyzes it for open loops, and schedules follow-ups if needed.
+    Ingests chat history, analyzes it for open loops and risks.
     """
-    # 1. Analyze
-    plan = analyzer.analyze_for_followup(history)
-    
-    if plan.needs_followup:
-        # 2. Calculate Trigger Time
-        trigger_time = datetime.now() + timedelta(hours=plan.suggested_delay_hours)
+    results = {}
+
+    # 1. Risk Analysis
+    try:
+        risk_assessment = risk_analyzer.analyze_session(history)
+        results["risk_assessment"] = risk_assessment.model_dump()
         
-        # 3. Save to DB
-        new_task = ScheduledFollowUp(
-            user_id=user_id,
-            topic=plan.topic,
-            context_summary=plan.context_summary,
-            email_content=plan.email_draft,
-            scheduled_time=trigger_time,
-            status="pending"
-        )
-        db.add(new_task)
-        db.commit()
+        if risk_assessment.is_critical:
+            print(f"CRITICAL RISK DETECTED for User {user_id}: {risk_assessment.risk_level}")
+            # In a real app, this would trigger an immediate alert
+    except Exception as e:
+        print(f"Risk Analysis Failed: {e}")
+        results["risk_error"] = str(e)
+
+    # 2. Follow-up Analysis
+    try:
+        plan = analyzer.analyze_for_followup(history)
+        results["followup_plan"] = plan.model_dump()
         
-        return {
-            "status": "scheduled", 
-            "topic": plan.topic, 
-            "time": trigger_time
-        }
+        if plan.needs_followup:
+            # Calculate Trigger Time
+            trigger_time = datetime.now() + timedelta(hours=plan.suggested_delay_hours)
+            
+            # Save to DB
+            new_task = ScheduledFollowUp(
+                user_id=user_id,
+                user_email=user_email,
+                topic=plan.topic,
+                context_summary=plan.context_summary,
+                email_content=plan.email_draft,
+                scheduled_time=trigger_time,
+                status="pending"
+            )
+            db.add(new_task)
+            db.commit()
+            
+            results["scheduled_followup"] = {
+                "topic": plan.topic,
+                "time": trigger_time
+            }
+    except Exception as e:
+        print(f"Follow-up Analysis Failed: {e}")
+        results["followup_error"] = str(e)
     
-    return {"status": "no_action_needed"}
+    return results
 
 @app.get("/pending-tasks")
 def get_pending_tasks(db: Session = Depends(get_db)):

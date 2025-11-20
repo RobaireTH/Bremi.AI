@@ -1,0 +1,50 @@
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from typing import List, Optional
+
+class BrevoEmailService:
+    def __init__(self):
+        self.smtp_server = os.getenv("SMTP_SERVER", "smtp-relay.brevo.com")
+        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        self.smtp_login = os.getenv("SMTP_LOGIN")
+        self.smtp_password = os.getenv("SMTP_PASSWORD")
+        self.sender_email = os.getenv("SENDER_EMAIL", "noreply@bremi.ai")
+        self.sender_name = os.getenv("SENDER_NAME", "Bremi.AI")
+
+    def send_checkup_email(self, to_email: str, name: str, topic: str, content: str) -> bool:
+        if not self.smtp_login or not self.smtp_password:
+            print("SMTP credentials not set. Email not sent.")
+            return False
+
+        msg = MIMEMultipart()
+        msg['From'] = f"{self.sender_name} <{self.sender_email}>"
+        msg['To'] = f"{name} <{to_email}>"
+        msg['Subject'] = f"Checking in: {topic}"
+
+        html_content = f"""
+        <html>
+            <body>
+                <p>Hi {name},</p>
+                <p>{content}</p>
+                <br>
+                <p>Warmly,</p>
+                <p>Bremi</p>
+            </body>
+        </html>
+        """
+        msg.attach(MIMEText(html_content, 'html'))
+
+        try:
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            server.starttls()
+            server.login(self.smtp_login, self.smtp_password)
+            server.sendmail(self.sender_email, to_email, msg.as_string())
+            server.quit()
+            print(f"Email sent to {to_email}")
+            return True
+        except Exception as e:
+            print(f"Error sending email: {e}")
+            return False
+

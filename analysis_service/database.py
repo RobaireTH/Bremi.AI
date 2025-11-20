@@ -14,6 +14,7 @@ class ScheduledFollowUp(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String, index=True)
+    user_email = Column(String, nullable=True)
     topic = Column(String)
     context_summary = Column(String)
     email_content = Column(String)
