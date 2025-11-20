@@ -96,7 +96,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     try {
       let location = undefined;
-      if (lowerText.includes("hospital") || lowerText.includes("help") || lowerText.includes("emergency") || lowerText.includes("clinic")) {
+      if (lowerText.includes("hospital") || lowerText.includes("help") || lowerText.includes("emergency") || lowerText.includes("clinic") || lowerText.includes("therapist") || lowerText.includes("doctor")) {
          try {
             const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
               navigator.geolocation.getCurrentPosition(resolve, reject);
@@ -110,39 +110,33 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
          }
       }
 
-      // Create placeholder for streaming response
-      const botMsgId = (Date.now() + 1).toString();
-      setMessages(prev => [...prev, {
-        id: botMsgId,
-        role: 'model',
-        text: '',
-        timestamp: Date.now()
-      }]);
-
       const response = await sendMessageToGemini(
         messages, 
         newMessage.text, 
         imageToSend || undefined, 
         location,
-        user.language,
-        (text) => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === botMsgId ? { ...msg, text } : msg
-          ));
-        }
+        user.language
       );
 
-      // Final update with grounding data
-      setMessages(prev => prev.map(msg => 
-        msg.id === botMsgId ? { 
-          ...msg, 
-          text: response.text,
-          groundingData: response.groundingData
-        } : msg
-      ));
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: response.text,
+        timestamp: Date.now(),
+        groundingData: response.groundingData
+      };
+
+      setMessages(prev => [...prev, botMessage]);
 
     } catch (error) {
       console.error(error);
+      // Add a visible error message to the chat if something catastrophic happens
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'model',
+        text: "Sorry, something went wrong. Please try again.",
+        timestamp: Date.now()
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -240,8 +234,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-md px-4 py-2 shadow-sm z-20 flex justify-between items-center sticky top-0 border-b border-white/50">
         <div className="flex items-center">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center text-green-600 mr-2 shadow-inner border border-white">
-             <Icons.Chat />
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center text-green-600 mr-2 shadow-inner border border-yellow-100 overflow-hidden">
+             <img src="/bremi-logo.svg" alt="Bremi Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <div className="flex items-center gap-2">
