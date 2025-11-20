@@ -110,23 +110,36 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
          }
       }
 
+      // Create placeholder for streaming response
+      const botMsgId = (Date.now() + 1).toString();
+      setMessages(prev => [...prev, {
+        id: botMsgId,
+        role: 'model',
+        text: '',
+        timestamp: Date.now()
+      }]);
+
       const response = await sendMessageToGemini(
         messages, 
         newMessage.text, 
         imageToSend || undefined, 
         location,
-        user.language
+        user.language,
+        (text) => {
+          setMessages(prev => prev.map(msg => 
+            msg.id === botMsgId ? { ...msg, text } : msg
+          ));
+        }
       );
 
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'model',
-        text: response.text,
-        timestamp: Date.now(),
-        groundingData: response.groundingData
-      };
-
-      setMessages(prev => [...prev, botMessage]);
+      // Final update with grounding data
+      setMessages(prev => prev.map(msg => 
+        msg.id === botMsgId ? { 
+          ...msg, 
+          text: response.text,
+          groundingData: response.groundingData
+        } : msg
+      ));
 
     } catch (error) {
       console.error(error);
@@ -232,7 +245,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-slate-800 text-lg tracking-tight leading-none">Padi</h2>
+              <h2 className="font-bold text-slate-800 text-lg tracking-tight leading-none">Bremi.AI</h2>
               {/* History Toggle moved here */}
               <button 
                 onClick={() => setSaveHistory(!saveHistory)}
