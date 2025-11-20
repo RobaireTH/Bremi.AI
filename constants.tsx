@@ -138,7 +138,8 @@ export const TRANSLATIONS = {
     continue_whatsapp: "Continue in WhatsApp",
     coming_soon_title: "Coming Soon!",
     coming_soon_desc: "We are working hard to bring Bremi.AI to WhatsApp. Stay tuned!",
-    go_back: "Go Back"
+    go_back: "Go Back",
+    privacy_notice: "Your privacy comes first. Chats are not saved unless you toggle 'History On'. All data stays locally on your device."
   },
   yo: {
     subtitle: "Ko si idajọ. Ko si wahala. Aye ailewu lati sọ ọkan rẹ jade.",
@@ -186,7 +187,8 @@ export const TRANSLATIONS = {
     continue_whatsapp: "Tẹsiwaju ni WhatsApp",
     coming_soon_title: "Nbọ Laipe!",
     coming_soon_desc: "A n ṣiṣẹ takuntakun lati mu Bremi.AI wa si WhatsApp. Duro yi!",
-    go_back: "Pada sẹhin"
+    go_back: "Pada sẹhin",
+    privacy_notice: "Aṣiri rẹ ṣe pataki. A ko fi ọrọ pamọ ayafi ti o ba tan 'Itan'. Awọn data wa lori ẹrọ rẹ."
   },
   ha: {
     subtitle: "Ba hukunci. Ba wahala. Wuri mai aminci don faɗar ran ku.",
@@ -234,7 +236,8 @@ export const TRANSLATIONS = {
     continue_whatsapp: "Ci gaba a WhatsApp",
     coming_soon_title: "Yana Zuwa Nan Ba Da Jimawa Ba!",
     coming_soon_desc: "Muna aiki tuƙuru don kawo Bremi.AI zuwa WhatsApp. Kasance tare da mu!",
-    go_back: "Koma baya"
+    go_back: "Koma baya",
+    privacy_notice: "Sirrinka yana da mahimmanci. Ba a adana hira sai ka kunna 'Tarihi'. Bayanai suna kan na'urarka."
   },
   ig: {
     subtitle: "Enweghị ikpe. Enweghị wahala. Ebe nchekwa iji kwuo uche gị.",
@@ -281,7 +284,8 @@ export const TRANSLATIONS = {
     continue: "Gaa n'ihu",
     continue_whatsapp: "Gaa n'ihu na WhatsApp",
     coming_soon_title: "Na-abịa n'oge na-adịghị anya!",
-    coming_soon_desc: "Anyị na-arụsi ọrụ ike iji weta Bremi.AI na WhatsApp. Nọrọ na-eche!",
-    go_back: "Gaa azụ"
+    coming_soon_desc: "A na-arụsi ọrụ ike iji weta Bremi.AI na WhatsApp. Nọrọ na-eche!",
+    go_back: "Gaa azụ",
+    privacy_notice: "Nzuzo gị dị mkpa. A naghị echekwa nkata ọ gwụla ma ị gbanyere 'Akụkọ'. Data niile na-anọ na ngwaọrụ gị."
   }
 };

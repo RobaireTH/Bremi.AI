@@ -297,9 +297,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {messages.map((msg) => (
           <div 
             key={msg.id} 
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${msg.role === 'user' ? 'justify-end' : msg.role === 'system' ? 'justify-center my-4' : 'justify-start'}`}
           >
-            <div className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-[70%]`}>
+            <div className={`flex flex-col ${msg.role === 'user' ? 'items-end' : msg.role === 'system' ? 'items-center w-full' : 'items-start'} max-w-[85%] md:max-w-[70%] ${msg.role === 'system' ? '!max-w-[95%]' : ''}`}>
               
               {msg.image && (
                 <div className="mb-2 rounded-2xl overflow-hidden border-2 border-white shadow-sm max-w-[200px]">
@@ -311,9 +311,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 className={`relative px-5 py-3.5 shadow-sm text-[15px] leading-relaxed transition-all hover:shadow-md ${
                   msg.role === 'user' 
                     ? 'bg-green-600 text-white rounded-2xl rounded-tr-sm' 
+                    : msg.role === 'system'
+                    ? 'bg-gradient-to-br from-blue-50 to-indigo-50 text-slate-600 text-center text-sm rounded-2xl border border-blue-100 w-full max-w-md mx-auto shadow-sm'
                     : 'bg-white text-slate-700 rounded-2xl rounded-tl-sm border border-gray-100'
                 }`}
               >
+                {msg.role === 'system' && (
+                   <div className="flex flex-col items-center mb-3">
+                      <div className="bg-white p-2 rounded-full shadow-sm mb-2 ring-4 ring-blue-50">
+                        <Icons.Sparkles className="w-5 h-5 text-indigo-500" />
+                      </div>
+                      <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Bremi Info</span>
+                   </div>
+                )}
                 <div className="whitespace-pre-wrap">{msg.text}</div>
                 
                 {msg.groundingData && msg.groundingData.length > 0 && (
@@ -334,6 +344,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 )}
               </div>
 
+              {msg.role !== 'system' && (
               <div className="flex justify-between items-center mt-1 px-1 w-full">
                 <div className={`text-[10px] font-medium ${msg.role === 'user' ? 'text-green-800/40' : 'text-slate-400'}`}>
                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -370,6 +381,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     </div>
                   )}
               </div>
+              )}
             </div>
           </div>
         ))}

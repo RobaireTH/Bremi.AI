@@ -115,8 +115,8 @@ export default function App() {
     const t = TRANSLATIONS[user.language];
     return [{
       id: 'welcome',
-      role: 'model' as const,
-      text: t.welcome.replace('${user.name}', user.name),
+      role: 'system' as const,
+      text: `${t.welcome.replace('${user.name}', user.name)}\n\n${t.privacy_notice}`,
       timestamp: Date.now()
     }];
   };
