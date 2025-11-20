@@ -468,7 +468,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       )}
 
       {/* Input Area */}
-      <div className="bg-white/90 backdrop-blur-md p-4 border-t border-gray-100 fixed bottom-[80px] left-0 right-0 md:absolute md:bottom-0 z-30 safe-bottom">
+      <div className="bg-white/90 backdrop-blur-md p-4 border-t border-gray-100 fixed bottom-[80px] left-0 right-0 z-30 safe-bottom">
         
         {selectedImage && (
           <div className="absolute bottom-full left-4 mb-4 animate-slide-up">
