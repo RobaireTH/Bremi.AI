@@ -97,10 +97,13 @@ export const sendMessageToGemini = async (
 
     let chat;
     if (!image) {
-        const recentHistory = history.slice(-10).map(msg => ({
-          role: msg.role,
-          parts: [{ text: msg.text }],
-        }));
+        const recentHistory = history
+          .filter(msg => msg.role === 'user' || msg.role === 'model')
+          .slice(-10)
+          .map(msg => ({
+            role: msg.role,
+            parts: [{ text: msg.text }],
+          }));
         
         chat = ai.chats.create({
           model: modelId,
