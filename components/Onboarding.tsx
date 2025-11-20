@@ -36,7 +36,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onLogin }) => {
       <div className="z-10 text-center max-w-md w-full">
         <div className="mb-8 flex justify-center">
           <div className="bg-white p-4 rounded-2xl shadow-lg rotate-3">
-            <Icons.Chat className="w-12 h-12 text-green-600" />
+            <img src="/pwa-icon.svg" alt="Bremi.AI Logo" className="w-12 h-12" />
           </div>
         </div>
 

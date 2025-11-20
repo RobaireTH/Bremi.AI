@@ -173,9 +173,22 @@ export const sendMessageToGemini = async (
 
     return { text, groundingData };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini API Error:", error);
-    return { text: "Omo, network dey shake slightly. Can you say that again?" };
+    
+    let errorMessage = "Couldn't process that right now. Let's try again.";
+    
+    if (error.message) {
+      if (error.message.includes("SAFETY") || error.message.includes("blocked")) {
+        errorMessage = "I can't answer that because it goes against my safety guidelines. Let's talk about something else.";
+      } else if (error.message.includes("429") || error.message.includes("quota")) {
+        errorMessage = "I'm a bit overwhelmed right now (too many requests). Give me a minute to cool down.";
+      } else if (error.message.includes("network") || error.message.includes("fetch") || error.message.includes("Failed to fetch")) {
+         errorMessage = "Network is acting up. Please check your internet connection.";
+      }
+    }
+    
+    return { text: errorMessage };
   }
 };
 
