@@ -146,6 +146,7 @@ export default function App() {
               initialMessages={getInitialMessages()}
               onEmergency={triggerEmergency}
               onSessionUpdate={handleSessionUpdate}
+              onUserUpdate={handleUpdateUser}
               sessionId={activeSessionId}
             />
           )}

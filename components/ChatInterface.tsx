@@ -10,6 +10,7 @@ interface ChatInterfaceProps {
   sessionId: string | null;
   onEmergency: () => void;
   onSessionUpdate: (messages: Message[], save: boolean) => void;
+  onUserUpdate: (user: UserProfile) => void;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
@@ -17,7 +18,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   initialMessages,
   sessionId,
   onEmergency,
-  onSessionUpdate
+  onSessionUpdate,
+  onUserUpdate
 }) => {
   const t = TRANSLATIONS[user.language];
   
@@ -28,7 +30,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [saveHistory, setSaveHistory] = useState(user.preferences.saveHistory);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,9 +47,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Notify parent of updates for history saving
   useEffect(() => {
     if (messages.length > 1) { // Don't save just the welcome message unless user interacted
-       onSessionUpdate(messages, saveHistory);
+       onSessionUpdate(messages, user.preferences.saveHistory);
     }
-  }, [messages, saveHistory]); // Removed onSessionUpdate from deps to avoid loops, though it should be stable
+  }, [messages, user.preferences.saveHistory]);
 
   useEffect(() => {
     return () => {
@@ -60,6 +61,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
     };
   }, []);
+
+  const handleToggleHistory = () => {
+    const updatedUser = {
+      ...user,
+      preferences: {
+        ...user.preferences,
+        saveHistory: !user.preferences.saveHistory
+      }
+    };
+    onUserUpdate(updatedUser);
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -242,11 +254,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <h2 className="font-bold text-slate-800 text-lg tracking-tight leading-none">Bremi.AI</h2>
               {/* History Toggle moved here */}
               <button 
-                onClick={() => setSaveHistory(!saveHistory)}
+                onClick={handleToggleHistory}
                 className="flex items-center transition-opacity hover:opacity-80"
-                title={saveHistory ? "History On" : "History Off"}
+                title={user.preferences.saveHistory ? "History On" : "History Off"}
               >
-                {saveHistory ? (
+                {user.preferences.saveHistory ? (
                   <Icons.ToggleRight className="w-8 h-8 text-green-500" />
                 ) : (
                   <Icons.ToggleLeft className="w-8 h-8 text-slate-300" />
@@ -285,7 +297,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-32 z-10">
-        {!saveHistory && messages.length > 1 && (
+        {!user.preferences.saveHistory && messages.length > 1 && (
            <div className="flex justify-center opacity-60 hover:opacity-100 transition-opacity">
              <div className="text-[10px] text-slate-500 bg-slate-200/50 px-3 py-1 rounded-full backdrop-blur-sm flex items-center">
                <Icons.Clock className="w-3 h-3 mr-1" />
