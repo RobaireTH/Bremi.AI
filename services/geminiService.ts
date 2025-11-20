@@ -6,7 +6,7 @@ import { Message, GroundingData, AnalysisResult, Language } from "../types";
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const BASE_SYSTEM_INSTRUCTION = `
-You are 'Bremi.AI', a warm, empathetic, and culturally aware mental health companion for Nigerians. 
+You are 'Padi', a warm, empathetic, and culturally aware mental health companion for Nigerians. 
 You understand Nigerian English, Pidgin English, Yoruba, Hausa, and Igbo nuances.
 Your goal is to provide a safe space, listen without judgment, and offer psycho-educational support and calming techniques.
 You are NOT a licensed medical professional. Do not diagnose.
@@ -23,8 +23,7 @@ export const sendMessageToGemini = async (
   currentInput: string,
   image?: string, // Base64 image string
   userLocation?: { latitude: number; longitude: number },
-  language: Language = 'en',
-  onChunk?: (text: string) => void
+  language: Language = 'en'
 ): Promise<{ text: string; groundingData?: GroundingData[] }> => {
   
   try {
@@ -33,7 +32,7 @@ export const sendMessageToGemini = async (
     
     // Customize instruction based on language
     const langName = { en: 'English', yo: 'Yoruba', ha: 'Hausa', ig: 'Igbo' }[language];
-    const langInstruction = `\nThe user prefers to communicate in ${langName}. Please adapt your responses to be culturally relevant to ${langName} speakers in Nigeria, while maintaining the friendly Bremi persona. Reply primarily in ${langName} or a natural mix (e.g. Engligbo) if appropriate.`;
+    const langInstruction = `\nThe user prefers to communicate in ${langName}. Please adapt your responses to be culturally relevant to ${langName} speakers in Nigeria, while maintaining the friendly Padi persona. Reply primarily in ${langName} or a natural mix (e.g. Engligbo) if appropriate.`;
     
     let config: any = {
       systemInstruction: BASE_SYSTEM_INSTRUCTION + langInstruction,
@@ -90,51 +89,15 @@ export const sendMessageToGemini = async (
         });
     }
 
-    let response: any;
+    let response;
     if (chat) {
-       if (onChunk) {
-         const stream = await chat.sendMessageStream({ message: currentInput });
-         let fullText = "";
-         let lastChunk;
-         for await (const chunk of stream) {
-            const chunkText = chunk.text || "";
-            fullText += chunkText;
-            onChunk(fullText);
-            lastChunk = chunk;
-         }
-         response = {
-            text: fullText,
-            candidates: lastChunk?.candidates
-         };
-       } else {
-         response = await chat.sendMessage({ message: currentInput });
-       }
+       response = await chat.sendMessage({ message: currentInput });
     } else {
-       if (onChunk) {
-         const stream = await ai.models.generateContentStream({
-           model: modelId,
-           contents: contents,
-           config: config
-         });
-         let fullText = "";
-         let lastChunk;
-         for await (const chunk of stream) {
-            const chunkText = chunk.text || "";
-            fullText += chunkText;
-            onChunk(fullText);
-            lastChunk = chunk;
-         }
-         response = {
-            text: fullText,
-            candidates: lastChunk?.candidates
-         };
-       } else {
-         response = await ai.models.generateContent({
-           model: modelId,
-           contents: contents,
-           config: config
-         });
-       }
+       response = await ai.models.generateContent({
+         model: modelId,
+         contents: contents,
+         config: config
+       });
     }
     
     let text = response.text || "I dey hear you. Tell me more.";
@@ -197,7 +160,7 @@ export const analyzeSession = async (history: Message[], language: Language = 'e
       .join('\n');
 
     const prompt = `
-      Analyze the following chat transcript between a user and an AI companion (Bremi). 
+      Analyze the following chat transcript between a user and an AI companion (Padi). 
       The user speaks ${langName}.
       Your goal is to offer gentle, psychoanalytical insights to the user to help them understand their thoughts better.
       
