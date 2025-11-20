@@ -35,7 +35,7 @@ export const Emergency: React.FC<EmergencyProps> = ({ onClose, language }) => {
           // Use Gemini with Google Maps tool to find hospitals
           const response = await sendMessageToGemini(
             [], 
-            "Find the nearest mental health clinics or hospitals to me right now. List them.",
+            "Find the nearest mental health clinics, therapists, or hospitals to me right now. List them.",
             undefined,
             { latitude, longitude },
             language
