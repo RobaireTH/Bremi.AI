@@ -113,12 +113,20 @@ export default function App() {
     // Default welcome message
     if (!user) return [];
     const t = TRANSLATIONS[user.language];
-    return [{
-      id: 'welcome',
-      role: 'system' as const,
-      text: `${t.welcome.replace('${user.name}', user.name)}\n\n${t.privacy_notice}`,
-      timestamp: Date.now()
-    }];
+    return [
+      {
+        id: 'privacy-notice',
+        role: 'system' as const,
+        text: t.privacy_notice,
+        timestamp: Date.now()
+      },
+      {
+        id: 'welcome',
+        role: 'model' as const,
+        text: t.welcome.replace('${user.name}', user.name),
+        timestamp: Date.now() + 1
+      }
+    ];
   };
 
   return (

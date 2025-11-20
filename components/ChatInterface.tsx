@@ -312,16 +312,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   msg.role === 'user' 
                     ? 'bg-green-600 text-white rounded-2xl rounded-tr-sm' 
                     : msg.role === 'system'
-                    ? 'bg-gradient-to-br from-blue-50 to-indigo-50 text-slate-600 text-center text-sm rounded-2xl border border-blue-100 w-full max-w-md mx-auto shadow-sm'
+                    ? 'bg-transparent text-slate-500 text-center text-xs w-full max-w-md mx-auto'
                     : 'bg-white text-slate-700 rounded-2xl rounded-tl-sm border border-gray-100'
                 }`}
               >
                 {msg.role === 'system' && (
-                   <div className="flex flex-col items-center mb-3">
-                      <div className="bg-white p-2 rounded-full shadow-sm mb-2 ring-4 ring-blue-50">
-                        <Icons.Sparkles className="w-5 h-5 text-indigo-500" />
+                   <div className="flex items-center justify-center mb-1 space-x-2">
+                      <div className="bg-white/50 p-1 rounded-full">
+                        <Icons.Sparkles className="w-3 h-3 text-slate-400" />
                       </div>
-                      <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Bremi Info</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bremi Info</span>
                    </div>
                 )}
                 <div className="whitespace-pre-wrap">{msg.text}</div>
