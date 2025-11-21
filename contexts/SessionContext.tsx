@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ChatSession, Message } from '../types';
 import { syncChatHistory } from '../services/apiService';
@@ -92,8 +93,17 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         const newSessions = sessions.filter(s => s.id !== sessionId);
         setSessions(newSessions);
         localStorage.setItem('bremiAI_sessions', JSON.stringify(newSessions));
+        
+        // Graceful state handling:
+        // If the deleted session was active, switch to the most recent session or start new chat
         if (activeSessionId === sessionId) {
-            setActiveSessionId(null);
+            if (newSessions.length > 0) {
+                 // Sort by lastUpdated to get the most recent one
+                 const sorted = [...newSessions].sort((a, b) => b.lastUpdated - a.lastUpdated);
+                 setActiveSessionId(sorted[0].id);
+            } else {
+                setActiveSessionId(null); // Reset to new chat state
+            }
         }
     };
 
