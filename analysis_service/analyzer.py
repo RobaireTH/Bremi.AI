@@ -68,3 +68,30 @@ class ContextAnalyzer:
         except Exception as e:
             print(f"Analysis Error: {e}")
             return FollowUpPlan(needs_followup=False, topic="Error", context_summary=str(e), suggested_delay_hours=0, email_draft="")
+
+    def generate_title(self, history: List[Dict[str, str]]) -> str:
+        """
+        Generates a short, relevant title for the chat session.
+        """
+        transcript = "\n".join([f"{msg.get('role', 'unknown').upper()}: {msg.get('text', '')}" for msg in history])
+        
+        prompt = f"""
+        Generate a short, concise title (3-5 words) for this chat session.
+        Do not use quotes. Just the title.
+        
+        Transcript:
+        {transcript}
+        """
+        
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_id,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="text/plain",
+                )
+            )
+            return response.text.strip() if response.text else "New Chat"
+        except Exception as e:
+            print(f"Title Generation Error: {e}")
+            return "New Chat"

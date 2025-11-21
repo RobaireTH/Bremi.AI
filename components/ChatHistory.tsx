@@ -11,12 +11,12 @@ interface ChatHistoryProps {
   language: Language;
 }
 
-export const ChatHistory: React.FC<ChatHistoryProps> = ({ 
-  sessions, 
-  onSelectSession, 
+export const ChatHistory: React.FC<ChatHistoryProps> = ({
+  sessions,
+  onSelectSession,
   onDeleteSession,
   onNewChat,
-  language 
+  language
 }) => {
   const t = TRANSLATIONS[language];
 
@@ -46,7 +46,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           <Icons.Clock className="w-5 h-5 mr-2 text-green-600" />
           {t.history}
         </h2>
-        <button 
+        <button
           onClick={onNewChat}
           className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center shadow-sm hover:bg-green-700 transition-colors"
         >
@@ -67,7 +67,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
         ) : (
           <div className="space-y-3">
             {sortedSessions.map((session) => (
-              <div 
+              <div
                 key={session.id}
                 onClick={() => onSelectSession(session)}
                 className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group relative"
@@ -76,7 +76,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                   <span className="text-[10px] font-bold text-green-600 uppercase tracking-wide">
                     {formatDate(session.lastUpdated)}
                   </span>
-                  <button 
+                  <button
                     onClick={(e) => onDeleteSession(session.id, e)}
                     className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
                     title={t.delete}
@@ -84,11 +84,11 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
                     <Icons.Trash className="w-4 h-4" />
                   </button>
                 </div>
-                
+
                 <p className="text-slate-700 text-sm line-clamp-2 font-medium leading-relaxed pr-6">
-                  {session.preview || "..."}
+                  {session.title || session.preview || "..."}
                 </p>
-                
+
                 <div className="mt-3 flex items-center text-xs text-slate-400 font-medium">
                   <span>{t.continue}</span>
                   <Icons.ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />

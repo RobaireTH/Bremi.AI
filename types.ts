@@ -34,6 +34,7 @@ export interface ChatSession {
   messages: Message[];
   lastUpdated: number;
   preview: string;
+  title?: string;
 }
 
 export interface AnalysisResult {

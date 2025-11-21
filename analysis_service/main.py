@@ -151,6 +151,14 @@ def sync_chat_history(
     except Exception as e:
         print(f"Follow-up Analysis Failed: {e}")
         results["followup_error"] = str(e)
+
+    # 3. Title Generation (if enough context)
+    if len(history) >= 2:
+        try:
+            title = analyzer.generate_title(history)
+            results["suggested_title"] = title
+        except Exception as e:
+            print(f"Title Generation Failed: {e}")
     
     return results
 
