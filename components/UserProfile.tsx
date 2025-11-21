@@ -39,7 +39,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate, onLogo
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6 pb-24">
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 flex flex-col items-center">
           <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 shadow-inner">
              {user.name.charAt(0).toUpperCase()}
