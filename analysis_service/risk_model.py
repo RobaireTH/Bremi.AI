@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from typing import List, Dict, Optional
 from pydantic import BaseModel, Field
 from google import genai
@@ -8,6 +9,9 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 class RiskAssessment(BaseModel):
     is_critical: bool = Field(description="Whether the session contains critical risk factors like suicide, self-harm, or violence.")
@@ -87,7 +91,7 @@ class RiskAnalysisModel:
                 raise ValueError("Empty response from model")
 
         except Exception as e:
-            print(f"Error during analysis: {e}")
+            logger.error(f"Error during analysis: {e}")
             # Return a safe default in case of error
             return RiskAssessment(
                 is_critical=False,

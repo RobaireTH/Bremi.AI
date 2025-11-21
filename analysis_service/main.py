@@ -1,16 +1,24 @@
 import uvicorn
-from fastapi import FastAPI, Depends, HTTPException
+import logging
+from fastapi import FastAPI, Depends, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import List, Dict, Optional
 import os
+import json
 
-from database import SessionLocal, engine, init_db, ScheduledFollowUp
+from database import SessionLocal, engine, init_db, ScheduledFollowUp, ChatHistory
 from analyzer import ContextAnalyzer
 from risk_model import RiskAnalysisModel
 from email_service import BrevoEmailService
+from whatsapp_service import WhatsAppService
+from chat_service import ChatService
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize DB
 init_db()
@@ -29,6 +37,8 @@ app.add_middleware(
 analyzer = ContextAnalyzer()
 risk_analyzer = RiskAnalysisModel()
 email_service = BrevoEmailService()
+whatsapp_service = WhatsAppService()
+chat_service = ChatService()
 
 # Dependency
 def get_db():
@@ -52,14 +62,8 @@ def check_for_due_followups():
         ).all()
 
         for item in due_items:
-            log_msg = f"""
---------------------------------------------------
-[EMAIL TRIGGERED] {datetime.now()}
-To User: {item.user_id} ({item.user_email})
-Topic: {item.topic}
---------------------------------------------------
-"""
-            print(log_msg)
+            log_msg = f"EMAIL TRIGGERED | User: {item.user_id} | Topic: {item.topic}"
+            logger.info(log_msg)
             
             # Send via Brevo
             if item.user_email:
@@ -74,16 +78,12 @@ Topic: {item.topic}
                 else:
                     item.status = "failed"
             else:
-                print("No email address found for user.")
+                logger.warning(f"No email address found for user {item.user_id}")
                 item.status = "failed_no_email"
-            
-            # Log to file for demo purposes
-            with open("sent_emails.log", "a", encoding="utf-8") as f:
-                f.write(log_msg)
         
         db.commit()
     except Exception as e:
-        print(f"Scheduler Error: {e}")
+        logger.error(f"Scheduler Error: {e}")
     finally:
         db.close()
 
@@ -116,10 +116,10 @@ def sync_chat_history(
         results["risk_assessment"] = risk_assessment.model_dump()
         
         if risk_assessment.is_critical:
-            print(f"CRITICAL RISK DETECTED for User {user_id}: {risk_assessment.risk_level}")
+            logger.critical(f"CRITICAL RISK DETECTED for User {user_id}: {risk_assessment.risk_level}")
             # In a real app, this would trigger an immediate alert
     except Exception as e:
-        print(f"Risk Analysis Failed: {e}")
+        logger.error(f"Risk Analysis Failed: {e}")
         results["risk_error"] = str(e)
 
     # 2. Follow-up Analysis
@@ -149,7 +149,7 @@ def sync_chat_history(
                 "time": trigger_time
             }
     except Exception as e:
-        print(f"Follow-up Analysis Failed: {e}")
+        logger.error(f"Follow-up Analysis Failed: {e}")
         results["followup_error"] = str(e)
 
     # 3. Title Generation (if enough context)
@@ -158,13 +158,108 @@ def sync_chat_history(
             title = analyzer.generate_title(history)
             results["suggested_title"] = title
         except Exception as e:
-            print(f"Title Generation Failed: {e}")
+            logger.error(f"Title Generation Failed: {e}")
     
     return results
 
 @app.get("/pending-tasks")
 def get_pending_tasks(db: Session = Depends(get_db)):
     return db.query(ScheduledFollowUp).filter(ScheduledFollowUp.status == "pending").all()
+
+# --- WhatsApp Webhook ---
+
+@app.get("/whatsapp/webhook")
+async def verify_webhook(
+    mode: str = Query(alias="hub.mode"),
+    token: str = Query(alias="hub.verify_token"),
+    challenge: str = Query(alias="hub.challenge")
+):
+    """
+    Verifies the webhook with WhatsApp.
+    """
+    verify_token = os.getenv("VERIFY_TOKEN", "bremi_secure_token")
+    
+    if mode == "subscribe" and token == verify_token:
+        logger.info("WEBHOOK_VERIFIED")
+        return int(challenge)
+    
+    raise HTTPException(status_code=403, detail="Verification failed")
+
+@app.post("/whatsapp/webhook")
+async def webhook_handler(request: Request):
+    """
+    Handles incoming WhatsApp messages.
+    """
+    try:
+        body = await request.json()
+        logger.info(f"Incoming Webhook: {json.dumps(body, indent=2)}")
+        
+        # Check if it's a message from a user
+        if (
+            body.get("entry") and 
+            body["entry"][0].get("changes") and 
+            body["entry"][0]["changes"][0].get("value") and 
+            body["entry"][0]["changes"][0]["value"].get("messages")
+        ):
+            change = body["entry"][0]["changes"][0]["value"]
+            message = change["messages"][0]
+            
+            if message["type"] == "text":
+                from_number = message["from"]
+                msg_body = message["text"]["body"]
+                msg_id = message["id"]
+                
+                # Mark as read
+                await whatsapp_service.mark_as_read(msg_id)
+                
+                db = SessionLocal()
+                try:
+                    # 1. Save User Message
+                    user_msg = ChatHistory(
+                        user_id=from_number,
+                        role="user",
+                        content=msg_body
+                    )
+                    db.add(user_msg)
+                    db.commit() # Commit to get ID/Timestamp if needed
+                    
+                    # 2. Fetch History (Limit to last 20 messages for context)
+                    # We need to sort by timestamp asc for the model
+                    history_records = db.query(ChatHistory).filter(
+                        ChatHistory.user_id == from_number
+                    ).order_by(ChatHistory.timestamp.desc()).limit(20).all()
+                    
+                    # Reverse to chronological order
+                    history_records.reverse()
+                    
+                    history = [{"role": h.role, "text": h.content} for h in history_records]
+                    
+                    # 3. Generate Response
+                    response_text = await chat_service.generate_response(history, msg_body)
+                    
+                    # 4. Save Model Response
+                    model_msg = ChatHistory(
+                        user_id=from_number,
+                        role="model",
+                        content=response_text
+                    )
+                    db.add(model_msg)
+                    db.commit()
+                    
+                    # 5. Send Response
+                    await whatsapp_service.send_message(from_number, response_text)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing message: {e}")
+                    db.rollback()
+                finally:
+                    db.close()
+                
+        return {"status": "received"}
+        
+    except Exception as e:
+        logger.error(f"Webhook Error: {e}")
+        return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))

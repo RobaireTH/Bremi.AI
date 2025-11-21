@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, Float, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Float, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -21,6 +21,15 @@ class ScheduledFollowUp(Base):
     created_at = Column(DateTime, default=datetime.now)
     scheduled_time = Column(DateTime)
     status = Column(String, default="pending") # pending, sent, cancelled
+
+class ChatHistory(Base):
+    __tablename__ = "chat_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, index=True)  # For WhatsApp, this will be the phone number
+    role = Column(String) # 'user' or 'model'
+    content = Column(Text)
+    timestamp = Column(DateTime, default=datetime.now)
 
 def init_db():
     Base.metadata.create_all(bind=engine)

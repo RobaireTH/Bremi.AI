@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import List, Dict, Optional
 from pydantic import BaseModel, Field
 from google import genai
@@ -7,6 +8,9 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
 load_dotenv()
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 class FollowUpPlan(BaseModel):
     needs_followup: bool = Field(description="Whether the user needs a check-in based on unresolved stress or events.")
@@ -19,7 +23,7 @@ class ContextAnalyzer:
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
         if not self.api_key:
-            print("Warning: GEMINI_API_KEY not set.")
+            logger.warning("Warning: GEMINI_API_KEY not set.")
         self.client = genai.Client(api_key=self.api_key)
         self.model_id = "gemini-2.5-flash"
 
@@ -66,7 +70,7 @@ class ContextAnalyzer:
             return FollowUpPlan(needs_followup=False, topic="", context_summary="", suggested_delay_hours=0, email_draft="")
 
         except Exception as e:
-            print(f"Analysis Error: {e}")
+            logger.error(f"Analysis Error: {e}")
             return FollowUpPlan(needs_followup=False, topic="Error", context_summary=str(e), suggested_delay_hours=0, email_draft="")
 
     def generate_title(self, history: List[Dict[str, str]]) -> str:
@@ -93,5 +97,5 @@ class ContextAnalyzer:
             )
             return response.text.strip() if response.text else "New Chat"
         except Exception as e:
-            print(f"Title Generation Error: {e}")
+            logger.error(f"Title Generation Error: {e}")
             return "New Chat"

@@ -1,8 +1,13 @@
 import os
 import smtplib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List, Optional
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class BrevoEmailService:
     def __init__(self):
@@ -15,7 +20,7 @@ class BrevoEmailService:
 
     def send_checkup_email(self, to_email: str, name: str, topic: str, content: str) -> bool:
         if not self.smtp_login or not self.smtp_password:
-            print("SMTP credentials not set. Email not sent.")
+            logger.warning("SMTP credentials not set. Email not sent.")
             return False
 
         msg = MIMEMultipart()
@@ -42,9 +47,8 @@ class BrevoEmailService:
             server.login(self.smtp_login, self.smtp_password)
             server.sendmail(self.sender_email, to_email, msg.as_string())
             server.quit()
-            print(f"Email sent to {to_email}")
+            logger.info(f"Email sent to {to_email}")
             return True
         except Exception as e:
-            print(f"Error sending email: {e}")
+            logger.error(f"Error sending email: {e}")
             return False
-
