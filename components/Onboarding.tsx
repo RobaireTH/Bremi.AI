@@ -36,11 +36,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onLogin }) => {
       <div className="z-10 text-center max-w-md w-full">
         <div className="mb-8 flex justify-center">
           <div className="bg-white p-4 rounded-2xl shadow-lg rotate-3">
-            <img src="/bremi-logo.svg" alt="Bremi.AI Logo" className="w-12 h-12" />
+            <img src="/bremi-logo.svg" alt="Bremi.Ai Logo" className="w-12 h-12" />
           </div>
         </div>
 
-        <h1 className="text-4xl font-bold text-slate-800 mb-2">Bremi.AI</h1>
+        <h1 className="text-4xl font-bold text-slate-800 mb-2">Bremi.Ai</h1>
         <p className="text-lg text-slate-600 mb-8">
           {t.subtitle}
         </p>

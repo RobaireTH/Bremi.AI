@@ -34,27 +34,27 @@ You remain Bremi, a trusted companion.
 You MUST never go outside of the bounds of your role as a supportive companion, and Mental Health Companion.
 You don't go outside the bounds of your role as a supportive companion.
 You MUST always check the time of the day before you send the greetings, or messages and respond accordingly.
-System Initialization should look like this "Ah, good $timeOfDay! Welcome. I'm Bremi.AI, and I am here for you. No need to carry your load alone—come and drop it down. Wetin dey your mind today? I'm listening" depending on the time of day.
+System Initialization should look like this "Ah, good $timeOfDay! Welcome. I'm Bremi.Ai, and I am here for you. No need to carry your load alone—come and drop it down. Wetin dey your mind today? I'm listening" depending on the time of day.
 Tone: Calm, brotherly/sisterly, understanding, respectful.
 `;
 
 export const sendMessageToGemini = async (
-  history: Message[],
+  history: Message[], 
   currentInput: string,
   image?: string, // Base64 image string
   userLocation?: { latitude: number; longitude: number },
   language: Language = 'en',
   onChunk?: (text: string) => void
 ): Promise<{ text: string; groundingData?: GroundingData[] }> => {
-
+  
   try {
     let modelId = "gemini-2.5-flash";
     let contents: any = [];
-
+    
     // Customize instruction based on language
     const langName = { en: 'English', yo: 'Yoruba', ha: 'Hausa', ig: 'Igbo' }[language];
     const langInstruction = `\nThe user prefers to communicate in ${langName}. Please adapt your responses to be culturally relevant to ${langName} speakers in Nigeria, while maintaining the friendly Bremi persona. Reply primarily in ${langName} or a natural mix (e.g. Engligbo) if appropriate.`;
-
+    
     let config: any = {
       systemInstruction: BASE_SYSTEM_INSTRUCTION + langInstruction,
     };
@@ -64,7 +64,7 @@ export const sendMessageToGemini = async (
       const cleanBase64 = image.includes("base64,") ? image.split("base64,")[1] : image;
       const mimeType = image.includes("data:") ? image.split(";")[0].split(":")[1] : "image/jpeg";
 
-      const imagePrompt = currentInput
+      const imagePrompt = currentInput 
         ? `${currentInput}\n\n[SYSTEM NOTE: You are Bremi. Analyze this image ONLY if it relates to the user's mental health, emotional state, environment affecting their mood, or cultural context. If the image is completely unrelated (e.g., a math problem, a random object with no emotional context, code, or explicit content), politely refuse to analyze it and gently steer the conversation back to their mental well-being. Do not solve problems or describe items irrelevant to your role as a mental health companion.]`
         : "Analyze this image in the context of mental health and emotional well-being. If unrelated, politely decline.";
 
@@ -81,7 +81,7 @@ export const sendMessageToGemini = async (
       };
     } else {
       contents = currentInput;
-
+      
       const tools: any[] = [
         { googleSearch: {} },
         { googleMaps: {} }
@@ -102,68 +102,68 @@ export const sendMessageToGemini = async (
 
     let chat;
     if (!image) {
-      const recentHistory = history
-        .filter(msg => msg.role === 'user' || msg.role === 'model')
-        .slice(-10)
-        .map(msg => ({
-          role: msg.role,
-          parts: [{ text: msg.text }],
-        }));
-
-      chat = ai.chats.create({
-        model: modelId,
-        config: config,
-        history: recentHistory
-      });
+        const recentHistory = history
+          .filter(msg => msg.role === 'user' || msg.role === 'model')
+          .slice(-10)
+          .map(msg => ({
+            role: msg.role,
+            parts: [{ text: msg.text }],
+          }));
+        
+        chat = ai.chats.create({
+          model: modelId,
+          config: config,
+          history: recentHistory
+        });
     }
 
     let response: any;
     if (chat) {
-      if (onChunk) {
-        const stream = await chat.sendMessageStream({ message: currentInput });
-        let fullText = "";
-        let lastChunk;
-        for await (const chunk of stream) {
-          const chunkText = chunk.text || "";
-          fullText += chunkText;
-          onChunk(fullText);
-          lastChunk = chunk;
-        }
-        response = {
-          text: fullText,
-          candidates: lastChunk?.candidates
-        };
-      } else {
-        response = await chat.sendMessage({ message: currentInput });
-      }
+       if (onChunk) {
+         const stream = await chat.sendMessageStream({ message: currentInput });
+         let fullText = "";
+         let lastChunk;
+         for await (const chunk of stream) {
+            const chunkText = chunk.text || "";
+            fullText += chunkText;
+            onChunk(fullText);
+            lastChunk = chunk;
+         }
+         response = {
+            text: fullText,
+            candidates: lastChunk?.candidates
+         };
+       } else {
+         response = await chat.sendMessage({ message: currentInput });
+       }
     } else {
-      if (onChunk) {
-        const stream = await ai.models.generateContentStream({
-          model: modelId,
-          contents: contents,
-          config: config
-        });
-        let fullText = "";
-        let lastChunk;
-        for await (const chunk of stream) {
-          const chunkText = chunk.text || "";
-          fullText += chunkText;
-          onChunk(fullText);
-          lastChunk = chunk;
-        }
-        response = {
-          text: fullText,
-          candidates: lastChunk?.candidates
-        };
-      } else {
-        response = await ai.models.generateContent({
-          model: modelId,
-          contents: contents,
-          config: config
-        });
-      }
+       if (onChunk) {
+         const stream = await ai.models.generateContentStream({
+           model: modelId,
+           contents: contents,
+           config: config
+         });
+         let fullText = "";
+         let lastChunk;
+         for await (const chunk of stream) {
+            const chunkText = chunk.text || "";
+            fullText += chunkText;
+            onChunk(fullText);
+            lastChunk = chunk;
+         }
+         response = {
+            text: fullText,
+            candidates: lastChunk?.candidates
+         };
+       } else {
+         response = await ai.models.generateContent({
+           model: modelId,
+           contents: contents,
+           config: config
+         });
+       }
     }
-
+    
     let text = response.text || "I dey hear you. Tell me more.";
     let groundingData: GroundingData[] = [];
 
@@ -183,19 +183,19 @@ export const sendMessageToGemini = async (
 
   } catch (error: any) {
     console.error("Gemini API Error:", error);
-
+    
     let errorMessage = "Couldn't process that right now. Let's try again.";
-
+    
     if (error.message) {
       if (error.message.includes("SAFETY") || error.message.includes("blocked")) {
         errorMessage = "I can't answer that because it goes against my safety guidelines. Let's talk about something else.";
       } else if (error.message.includes("429") || error.message.includes("quota")) {
         errorMessage = "I'm a bit overwhelmed right now (too many requests). Give me a minute to cool down.";
       } else if (error.message.includes("network") || error.message.includes("fetch") || error.message.includes("Failed to fetch")) {
-        errorMessage = "Network is acting up. Please check your internet connection.";
+         errorMessage = "Network is acting up. Please check your internet connection.";
       }
     }
-
+    
     return { text: errorMessage };
   }
 };
@@ -211,7 +211,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' },
+            prebuiltVoiceConfig: { voiceName: 'Kore' }, 
           },
         },
       },
@@ -230,7 +230,7 @@ export const analyzeSession = async (history: Message[], language: Language = 'e
   try {
     const modelId = "gemini-2.5-flash";
     const langName = { en: 'English', yo: 'Yoruba', ha: 'Hausa', ig: 'Igbo' }[language];
-
+    
     const transcript = history
       .filter(m => !m.image)
       .map(m => `${m.role.toUpperCase()}: ${m.text}`)
@@ -277,10 +277,10 @@ export const analyzeSession = async (history: Message[], language: Language = 'e
         }
       }
     });
-
+    
     const resultText = response.text;
     if (!resultText) return null;
-
+    
     return JSON.parse(resultText) as AnalysisResult;
 
   } catch (error) {

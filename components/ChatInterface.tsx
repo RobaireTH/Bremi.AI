@@ -276,7 +276,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-slate-800 text-lg tracking-tight leading-none">Bremi.AI</h2>
+              <h2 className="font-bold text-slate-800 text-lg tracking-tight leading-none">Bremi.Ai</h2>
               {/* History Toggle moved here */}
               <button
                 onClick={handleToggleHistory}

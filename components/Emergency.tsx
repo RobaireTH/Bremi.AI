@@ -118,7 +118,7 @@ export const Emergency: React.FC<EmergencyProps> = ({ onClose, language }) => {
         </div>
 
         <div className="text-center text-xs text-gray-400 mt-4">
-          Bremi.AI connects you to resources but is not a substitute for professional medical service.
+          Bremi.Ai connects you to resources but is not a substitute for professional medical service.
         </div>
       </div>
     </div>

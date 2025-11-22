@@ -15,8 +15,8 @@ class BrevoEmailService:
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
         self.smtp_login = os.getenv("SMTP_LOGIN")
         self.smtp_password = os.getenv("SMTP_PASSWORD")
-        self.sender_email = os.getenv("SENDER_EMAIL", "noreply@bremi.ai")
-        self.sender_name = os.getenv("SENDER_NAME", "Bremi.AI")
+        self.sender_email = os.getenv("SENDER_EMAIL", "robaireth@gmail.com")
+        self.sender_name = os.getenv("SENDER_NAME", "Bremi.Ai")
 
     def send_checkup_email(self, to_email: str, name: str, topic: str, content: str) -> bool:
         if not self.smtp_login or not self.smtp_password:

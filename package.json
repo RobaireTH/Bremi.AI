@@ -30,13 +30,13 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RobaireTH/Bremi.AI.git"
+    "url": "git+https://github.com/RobaireTH/Bremi.Ai.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/RobaireTH/Bremi.AI/issues"
+    "url": "https://github.com/RobaireTH/Bremi.Ai/issues"
   },
-  "homepage": "https://github.com/RobaireTH/Bremi.AI#readme"
+  "homepage": "https://github.com/RobaireTH/Bremi.Ai#readme"
 }

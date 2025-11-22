@@ -16,8 +16,8 @@ export default defineConfig(({ mode }) => {
           registerType: 'autoUpdate',
           includeAssets: ['bremi-logo.svg'],
           manifest: {
-            name: 'Bremi.AI - Your Mental Health Companion',
-            short_name: 'Bremi.AI',
+            name: 'Bremi.Ai - Your Mental Health Companion',
+            short_name: 'Bremi.Ai',
             description: 'A culturally aware mental health companion for Nigerians.',
             theme_color: '#f0fdf4',
             background_color: '#f0fdf4',
