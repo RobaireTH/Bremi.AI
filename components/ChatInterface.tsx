@@ -1,5 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Message, AnalysisResult } from '../types';
 import { Icons, TRANSLATIONS } from '../constants';
 import { sendMessageToGemini, analyzeSession, generateSpeech } from '../services/geminiService';
@@ -345,10 +347,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
               <div
                 className={`relative px-5 py-3.5 shadow-sm text-[15px] leading-relaxed transition-all hover:shadow-md ${msg.role === 'user'
-                    ? 'bg-green-600 text-white rounded-2xl rounded-tr-sm'
-                    : msg.role === 'system'
-                      ? 'bg-transparent text-slate-500 text-center text-xs w-full max-w-md mx-auto'
-                      : 'bg-white text-slate-700 rounded-2xl rounded-tl-sm border border-gray-100'
+                  ? 'bg-green-600 text-white rounded-2xl rounded-tr-sm'
+                  : msg.role === 'system'
+                    ? 'bg-transparent text-slate-500 text-center text-xs w-full max-w-md mx-auto'
+                    : 'bg-white text-slate-700 rounded-2xl rounded-tl-sm border border-gray-100'
                   }`}
               >
                 {msg.role === 'system' && (
@@ -359,7 +361,23 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bremi Info</span>
                   </div>
                 )}
-                <div className="whitespace-pre-wrap">{msg.text}</div>
+                <div className="markdown-container">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      p: ({ node, ...props }) => <p {...props} className="mb-2 last:mb-0" />,
+                      ul: ({ node, ...props }) => <ul {...props} className="list-disc list-inside mb-2" />,
+                      ol: ({ node, ...props }) => <ol {...props} className="list-decimal list-inside mb-2" />,
+                      li: ({ node, ...props }) => <li {...props} className="mb-1" />,
+                      a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" className="underline opacity-90 hover:opacity-100" />,
+                      strong: ({ node, ...props }) => <strong {...props} className="font-bold" />,
+                      em: ({ node, ...props }) => <em {...props} className="italic" />,
+                      code: ({ node, ...props }) => <code {...props} className="bg-black/10 rounded px-1 py-0.5 text-xs font-mono" />,
+                    }}
+                  >
+                    {msg.text}
+                  </ReactMarkdown>
+                </div>
 
                 {msg.groundingData && msg.groundingData.length > 0 && (
                   <div className="mt-3 pt-2 border-t border-gray-200/50">
@@ -570,8 +588,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               onClick={handleSend}
               disabled={(!inputText.trim() && !selectedImage) || isLoading}
               className={`p-3 mb-0.5 rounded-full transition-all shadow-md ${(inputText.trim() || selectedImage)
-                  ? 'bg-green-600 text-white hover:bg-green-700 transform hover:scale-105'
-                  : 'bg-gray-200 text-gray-400'
+                ? 'bg-green-600 text-white hover:bg-green-700 transform hover:scale-105'
+                : 'bg-gray-200 text-gray-400'
                 }`}
             >
               <Icons.Send className="w-6 h-6" />
