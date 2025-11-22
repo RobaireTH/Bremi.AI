@@ -24,18 +24,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const getInitialMessages = () => {
     if (activeSession) return activeSession.messages;
 
+    // Only show the privacy/system notice; let the model generate
+    // its own first greeting based on the system instructions.
     return [
       {
         id: 'privacy-notice',
         role: 'system' as const,
         text: t.privacy_notice,
         timestamp: Date.now()
-      },
-      {
-        id: 'welcome',
-        role: 'model' as const,
-        text: t.welcome.replace('${user.name}', user.name),
-        timestamp: Date.now() + 1
       }
     ];
   };

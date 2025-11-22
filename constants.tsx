@@ -117,7 +117,7 @@ export const TRANSLATIONS = {
     finding: "Finding nearest centers...",
     error_loc: "Could not access location",
     open_maps: "Open in Maps",
-    welcome: "Hello. How body? I dey here for you. Anything weighing you down today?",
+    welcome: "Hello. I'm here for you. Is anything weighing on your mind today?",
     why_breathe: "Why this helps?",
     why_breathe_desc: "This 4-7-8 technique calms your nervous system instantly.",
     instructions: "Follow the circle. Inhale peace, exhale wahala.",
