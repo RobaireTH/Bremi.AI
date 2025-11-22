@@ -22,19 +22,50 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     const [isLoaded, setIsLoaded] = useState(false);
     const { user } = useUser();
 
-    useEffect(() => {
-        const storedSessions = localStorage.getItem('bremiAI_sessions');
-        if (storedSessions) {
-            setSessions(JSON.parse(storedSessions));
+    /**
+     * Derive the localStorage key for sessions for the current user.
+     * This ensures sessions are isolated per account and we don't
+     * show history from a different user on the same device.
+     */
+    const getSessionStorageKey = () => {
+        if (user && user.id) {
+            return `bremiAI_sessions_${user.id}`;
         }
+        // Fallback key for anonymous/legacy behaviour
+        return 'bremiAI_sessions';
+    };
+
+    /**
+     * Load sessions whenever the active user changes.
+     * This prevents a new account from seeing sessions
+     * that were created by a previous account.
+     */
+    useEffect(() => {
+        const storageKey = getSessionStorageKey();
+        const storedSessions = localStorage.getItem(storageKey);
+
+        if (storedSessions) {
+            try {
+                setSessions(JSON.parse(storedSessions));
+            } catch {
+                // In case of corrupted data, reset sessions
+                setSessions([]);
+            }
+        } else {
+            setSessions([]);
+        }
+
+        // Reset active session when switching accounts
+        setActiveSessionId(null);
         setIsLoaded(true);
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.id]);
 
     useEffect(() => {
-        if (isLoaded) {
-            localStorage.setItem('bremiAI_sessions', JSON.stringify(sessions));
-        }
-    }, [sessions, isLoaded]);
+        if (!isLoaded) return;
+        const storageKey = getSessionStorageKey();
+        localStorage.setItem(storageKey, JSON.stringify(sessions));
+    }, [sessions, isLoaded, user?.id]);
 
     const updateSession = async (messages: Message[], save: boolean) => {
         // 1. Empty Chat Prevention: Don't save if no user messages
@@ -92,7 +123,8 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     const deleteSession = (sessionId: string) => {
         const newSessions = sessions.filter(s => s.id !== sessionId);
         setSessions(newSessions);
-        localStorage.setItem('bremiAI_sessions', JSON.stringify(newSessions));
+        const storageKey = getSessionStorageKey();
+        localStorage.setItem(storageKey, JSON.stringify(newSessions));
         
         // Graceful state handling:
         // If the deleted session was active, switch to the most recent session or start new chat
