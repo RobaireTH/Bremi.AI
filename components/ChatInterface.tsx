@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Message, AnalysisResult } from '../types';
 import { Icons, TRANSLATIONS } from '../constants';
-import { sendMessageToGemini, analyzeSession, generateSpeech } from '../services/geminiService';
+import { sendMessageToGemini, analyzeSession, generateSpeech, generateWikiEntry } from '../services/geminiService';
 import { useUser } from '../contexts/UserContext';
 import { useSession } from '../contexts/SessionContext';
 import { PSYCHO_WIKI, PsychoWikiEntry } from '../psychoWiki';
@@ -50,6 +50,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [activeWikiEntry, setActiveWikiEntry] = useState<PsychoWikiEntry | null>(null);
+  const [dynamicWiki, setDynamicWiki] = useState<Record<string, PsychoWikiEntry>>({});
+  const [wikiLoadingId, setWikiLoadingId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -87,6 +89,40 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     return PSYCHO_WIKI.filter((entry) =>
       entry.triggers.some((trigger) => lower.includes(trigger.toLowerCase()))
     );
+  };
+
+  const openWikiById = async (id: string, labelFromLink?: string) => {
+    const staticEntry = PSYCHO_WIKI.find((e) => e.id === id);
+    if (staticEntry) {
+      setActiveWikiEntry(staticEntry);
+      return;
+    }
+
+    if (dynamicWiki[id]) {
+      setActiveWikiEntry(dynamicWiki[id]);
+      return;
+    }
+
+    if (wikiLoadingId === id) return;
+
+    setWikiLoadingId(id);
+    try {
+      const fallbackLabel =
+        labelFromLink ||
+        id
+          .replace(/^bremi_?/i, '')
+          .replace(/_/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+      const generated = await generateWikiEntry(id, fallbackLabel || id, user.language);
+      if (generated) {
+        setDynamicWiki((prev) => ({ ...prev, [id]: generated }));
+        setActiveWikiEntry(generated);
+      }
+    } finally {
+      setWikiLoadingId(null);
+    }
   };
 
   const handleToggleHistory = () => {
@@ -374,7 +410,33 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       ul: ({ node, ...props }) => <ul {...props} className="list-disc list-inside mb-2" />,
                       ol: ({ node, ...props }) => <ol {...props} className="list-decimal list-inside mb-2" />,
                       li: ({ node, ...props }) => <li {...props} className="mb-1" />,
-                      a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" className="underline opacity-90 hover:opacity-100" />,
+                      a: ({ node, href, ...props }) => {
+                        const url = href || '';
+                        if (url.startsWith('bremi-wiki://')) {
+                          const id = url.replace('bremi-wiki://', '');
+                          return (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                openWikiById(id, String(props.children ?? '') || undefined);
+                              }}
+                              className="underline decoration-dotted text-emerald-700 opacity-90 hover:opacity-100"
+                            >
+                              {props.children}
+                            </button>
+                          );
+                        }
+                        return (
+                          <a
+                            {...props}
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline opacity-90 hover:opacity-100"
+                          />
+                        );
+                      },
                       strong: ({ node, ...props }) => <strong {...props} className="font-bold" />,
                       em: ({ node, ...props }) => <em {...props} className="italic" />,
                       code: ({ node, ...props }) => <code {...props} className="bg-black/10 rounded px-1 py-0.5 text-xs font-mono" />,

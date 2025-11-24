@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Message, GroundingData, AnalysisResult, Language } from "../types";
+import { PsychoWikiEntry } from "../psychoWiki";
 
 // Initialize Gemini
 // process.env.API_KEY is expected to be available in the environment
@@ -70,7 +71,8 @@ export const sendMessageToGemini = async (
     const langInstruction = `
 The user prefers to communicate in ${langName}. Please adapt your responses to be culturally relevant to ${langName} speakers in Nigeria, while maintaining the friendly Bremi persona.
 Use clear, standard ${langName} in your replies (no pidgin or heavy slang). You may understand pidgin or mixed language, but always respond in standard, easy-to-read ${langName}.
-When you notice a clear psychological pattern such as Emotional Lability, Rumination, Catastrophizing, Hypervigilance, Burnout, Attachment Anxiety, Dissociation, Rejection Sensitivity, or Imposter Syndrome, briefly NAME the pattern once in your response in natural language (e.g., "This sounds a bit like Emotional Lability"), only when it truly fits the user’s description.`;
+When you notice a clear psychological pattern such as Emotional Lability, Rumination, Catastrophizing, Hypervigilance, Burnout, Attachment Anxiety, Dissociation, Rejection Sensitivity, or Imposter Syndrome, briefly NAME the pattern once in your response in natural language (e.g., "This sounds a bit like Emotional Lability"), only when it truly fits the user’s description.
+If you want to invite the user to open a Bremi psycho-education wiki entry, add a markdown hyperlink using the scheme \`bremi-wiki://<id>\`, for example: [Emotional Lability](bremi-wiki://emotional_lability), [Rumination](bremi-wiki://rumination), [Catastrophizing](bremi-wiki://catastrophizing), [Hypervigilance](bremi-wiki://hypervigilance), [Burnout](bremi-wiki://burnout), [Attachment Anxiety](bremi-wiki://attachment_anxiety), [Dissociation](bremi-wiki://dissociation), [Rejection Sensitivity](bremi-wiki://rejection_sensitivity), [Imposter Syndrome](bremi-wiki://imposter_syndrome).`;
     
     let config: any = {
       systemInstruction: BASE_SYSTEM_INSTRUCTION + langInstruction,
@@ -306,6 +308,70 @@ ${transcript}
 
   } catch (error) {
     console.error("Analysis Error:", error);
+    return null;
+  }
+};
+
+export const generateWikiEntry = async (
+  id: string,
+  label: string,
+  language: Language = 'en'
+): Promise<PsychoWikiEntry | null> => {
+  try {
+    const modelId = "gemini-2.5-flash";
+    const langName = { en: 'English', yo: 'Yoruba', ha: 'Hausa', ig: 'Igbo' }[language];
+
+    const prompt = `
+You are helping Bremi.AI create a psycho-education wiki entry for a mental health concept.
+
+Concept label: "${label}"
+Internal ID: "${id}"
+User language: ${langName}.
+
+Write a concise, compassionate, and non-clinical explanation that would make sense to a regular person in Nigeria.
+
+Return ONLY a JSON object with the following fields:
+- id: string (must be exactly "${id}")
+- label: string (short title, usually same as the concept label)
+- shortDescription: string (1–2 sentences, simple explanation)
+- biologicalWhy: string (2–4 sentences about brain/nervous system/biology behind it, in plain language)
+- whatItFeelsLike: string (2–4 sentences describing common lived experience)
+- gentleReframes: string[] (3–5 short, validating and hopeful statements)
+`;
+
+    const response = await ai.models.generateContent({
+      model: modelId,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            id: { type: Type.STRING },
+            label: { type: Type.STRING },
+            shortDescription: { type: Type.STRING },
+            biologicalWhy: { type: Type.STRING },
+            whatItFeelsLike: { type: Type.STRING },
+            gentleReframes: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+          },
+        },
+      },
+    });
+
+    const resultText = response.text;
+    if (!resultText) return null;
+
+    const parsed = JSON.parse(resultText) as PsychoWikiEntry;
+    // Ensure the id matches what we expect
+    return {
+      ...parsed,
+      id,
+    };
+  } catch (error) {
+    console.error("Wiki Entry Generation Error:", error);
     return null;
   }
 };
