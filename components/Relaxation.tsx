@@ -23,7 +23,7 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
     | 'self_compassion'
   >('478_breathing');
   const [activeWikiEntry, setActiveWikiEntry] = useState<PsychoWikiEntry | null>(null);
-  const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
+  const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
@@ -88,7 +88,23 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
   }, []);
 
   const speakGuide = async (id: string, text: string) => {
-    if (loadingAudioId) return;
+    // If this audio is already playing, stop it
+    if (activeAudioId === id) {
+      if (sourceNodeRef.current) {
+        try {
+          sourceNodeRef.current.stop();
+        } catch (e) {}
+        sourceNodeRef.current = null;
+      }
+      if (audioContextRef.current) {
+        try {
+          await audioContextRef.current.close();
+        } catch (e) {}
+        audioContextRef.current = null;
+      }
+      setActiveAudioId(null);
+      return;
+    }
 
     if (sourceNodeRef.current) {
       try {
@@ -103,7 +119,7 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
       audioContextRef.current = null;
     }
 
-    setLoadingAudioId(id);
+    setActiveAudioId(id);
     try {
       const base64Audio = await generateSpeech(text);
       if (!base64Audio) throw new Error('No audio data received');
@@ -134,13 +150,13 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
       sourceNodeRef.current = source;
 
       source.onended = () => {
-        setLoadingAudioId(null);
+        setActiveAudioId(null);
       };
     } catch (e) {
       console.error('Failed to play guide audio', e);
-      setLoadingAudioId(null);
+      setActiveAudioId(null);
     } finally {
-      setLoadingAudioId(null);
+      setActiveAudioId(null);
     }
   };
 
@@ -193,12 +209,17 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
               onClick={() => speakGuide(selectedTool, getGuideText())}
               className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-white/70 text-green-800 border border-green-200 hover:bg-white transition-colors shadow-sm"
             >
-              {loadingAudioId === selectedTool ? (
-                <span className="w-3.5 h-3.5 rounded-full border-2 border-green-500 border-t-transparent animate-spin" />
+              {activeAudioId === selectedTool ? (
+                <>
+                  <Icons.X className="w-3.5 h-3.5" />
+                  <span>Stop</span>
+                </>
               ) : (
-                <Icons.Speaker className="w-3.5 h-3.5" />
+                <>
+                  <Icons.Speaker className="w-3.5 h-3.5" />
+                  <span>Guided voice</span>
+                </>
               )}
-              <span>Guided voice</span>
             </button>
           </div>
 
@@ -597,12 +618,17 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
                 }
                 className="flex-1 bg-emerald-50 text-emerald-800 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-100 transition-colors"
               >
-                {loadingAudioId === `wiki-${activeWikiEntry.id}` ? (
-                  <div className="w-4 h-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+                {activeAudioId === `wiki-${activeWikiEntry.id}` ? (
+                  <>
+                    <Icons.X className="w-4 h-4" />
+                    <span>Stop</span>
+                  </>
                 ) : (
-                  <Icons.Speaker className="w-4 h-4" />
+                  <>
+                    <Icons.Speaker className="w-4 h-4" />
+                    <span>Let Bremi read this to me</span>
+                  </>
                 )}
-                <span>Let Bremi read this to me</span>
               </button>
               <button
                 onClick={() => setActiveWikiEntry(null)}

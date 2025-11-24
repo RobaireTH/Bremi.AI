@@ -237,7 +237,23 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const handleSpeak = async (text: string, id: string) => {
-    if (loadingAudioId) return;
+    // If this audio is already playing/loading, treat this as a stop request
+    if (loadingAudioId === id) {
+      if (sourceNodeRef.current) {
+        try {
+          sourceNodeRef.current.stop();
+        } catch (e) {}
+        sourceNodeRef.current = null;
+      }
+      if (audioContextRef.current) {
+        try {
+          await audioContextRef.current.close();
+        } catch (e) {}
+        audioContextRef.current = null;
+      }
+      setLoadingAudioId(null);
+      return;
+    }
 
     if (sourceNodeRef.current) {
       try { sourceNodeRef.current.stop(); } catch (e) { }
