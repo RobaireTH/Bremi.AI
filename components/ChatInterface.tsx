@@ -7,6 +7,7 @@ import { Icons, TRANSLATIONS } from '../constants';
 import { sendMessageToGemini, analyzeSession, generateSpeech } from '../services/geminiService';
 import { useUser } from '../contexts/UserContext';
 import { useSession } from '../contexts/SessionContext';
+import { PSYCHO_WIKI, PsychoWikiEntry } from '../psychoWiki';
 
 interface ChatInterfaceProps {
   onEmergency: () => void;
@@ -48,6 +49,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [activeWikiEntry, setActiveWikiEntry] = useState<PsychoWikiEntry | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -79,6 +81,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
     };
   }, []);
+
+  const findWikiMatches = (text: string): PsychoWikiEntry[] => {
+    const lower = text.toLowerCase();
+    return PSYCHO_WIKI.filter((entry) =>
+      entry.triggers.some((trigger) => lower.includes(trigger.toLowerCase()))
+    );
+  };
 
   const handleToggleHistory = () => {
     const updatedUser = {
@@ -375,6 +384,39 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </ReactMarkdown>
                 </div>
 
+                {/* Psychoanalysis Wiki Chips */}
+                {(msg.role === 'user' || msg.role === 'model') && (
+                  (() => {
+                    const matches = findWikiMatches(msg.text);
+                    if (!matches.length) return null;
+                    return (
+                      <div className="mt-3 space-y-2">
+                        {matches.map((entry) => (
+                          <button
+                            key={entry.id}
+                            type="button"
+                            onClick={() => setActiveWikiEntry(entry)}
+                            className="w-full text-left text-xs bg-emerald-50 border border-emerald-100 text-emerald-900 px-3 py-2 rounded-xl hover:bg-emerald-100 transition-colors flex items-start gap-2"
+                          >
+                            <span className="mt-0.5">
+                              <Icons.Brain className="w-3.5 h-3.5 text-emerald-500" />
+                            </span>
+                            <span>
+                              <span className="font-semibold underline decoration-dotted">
+                                {entry.label}
+                              </span>
+                              <span className="block mt-0.5">
+                                This sounds like <strong>{entry.label}</strong>. Tap to read why
+                                this happens biologically and what you can do gently about it.
+                              </span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()
+                )}
+
                 {msg.groundingData && msg.groundingData.length > 0 && (
                   <div className="mt-3 pt-2 border-t border-gray-200/50">
                     <p className="text-[10px] font-bold uppercase tracking-wider opacity-70 mb-1">Resources</p>
@@ -522,6 +564,102 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition-all transform active:scale-[0.98]"
               >
                 Close Reflection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Psychoanalysis Wiki Overlay */}
+      {activeWikiEntry && (
+        <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-white w-full md:max-w-md md:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-slide-up">
+            <div className="bg-emerald-900 p-5 text-white flex justify-between items-center">
+              <div className="flex items-center">
+                <div className="bg-white/10 p-2 rounded-lg mr-3">
+                  <Icons.Brain className="w-5 h-5 text-emerald-300" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">{activeWikiEntry.label}</h3>
+                  <p className="text-xs text-emerald-200">Psycho-education · Bremi Wiki</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveWikiEntry(null)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <Icons.X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-5 bg-gray-50/60">
+              <div>
+                <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                  In simple language
+                </h4>
+                <p className="text-sm text-slate-800 leading-relaxed">
+                  {activeWikiEntry.shortDescription}
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider mb-1">
+                  Why this happens biologically
+                </h4>
+                <p className="text-sm text-slate-800 leading-relaxed">
+                  {activeWikiEntry.biologicalWhy}
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                  What it can feel like
+                </h4>
+                <p className="text-sm text-slate-800 leading-relaxed">
+                  {activeWikiEntry.whatItFeelsLike}
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider mb-2">
+                  Gentle reframes
+                </h4>
+                <ul className="space-y-2">
+                  {activeWikiEntry.gentleReframes.map((line, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start text-sm text-emerald-900 bg-white rounded-xl border border-emerald-100 px-3 py-2 shadow-sm"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1 mr-2 flex-shrink-0" />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-100 bg-white flex gap-3">
+              <button
+                onClick={() =>
+                  handleSpeak(
+                    `${activeWikiEntry.label}. ${activeWikiEntry.shortDescription} ${activeWikiEntry.biologicalWhy}`,
+                    `wiki-${activeWikiEntry.id}`
+                  )
+                }
+                className="flex-1 bg-emerald-50 text-emerald-800 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-100 transition-colors"
+              >
+                {loadingAudioId === `wiki-${activeWikiEntry.id}` ? (
+                  <div className="w-4 h-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+                ) : (
+                  <Icons.Speaker className="w-4 h-4" />
+                )}
+                <span>Let Bremi read this to me</span>
+              </button>
+              <button
+                onClick={() => setActiveWikiEntry(null)}
+                className="px-4 py-3 rounded-xl font-semibold text-sm bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>
