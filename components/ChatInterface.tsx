@@ -353,7 +353,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center">
           <button
             onClick={handleAnalyze}
             disabled={isAnalyzing || messages.length < 3}
@@ -366,13 +366,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <Icons.Brain className="w-4 h-4 mr-1.5" />
             )}
             {t.reflect}
-          </button>
-          <button
-            onClick={onEmergency}
-            className="bg-red-50 text-red-600 px-3 py-1.5 rounded-full text-xs font-bold flex items-center border border-red-100 hover:bg-red-100 transition-colors shadow-sm"
-          >
-            <Icons.Alert className="w-4 h-4 mr-1" />
-            {t.sos}
           </button>
         </div>
       </div>
