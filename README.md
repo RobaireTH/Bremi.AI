@@ -33,7 +33,7 @@ Top‑level folders/files:
   - `requirements.txt` – Python dependencies.
 - `psychoWiki.ts` – base psycho‑education “wiki” entries (Emotional Lability, Burnout, etc.).
 - `constants.tsx`, `types.ts` – shared UI strings, types, icons.
-- `vite.config.ts` – Vite + PWA config, Gemini API wiring.
+- `vite.config.ts` – Vite + PWA config, API wiring.
 
 ---
 
@@ -97,7 +97,7 @@ You need a valid **Gemini API key**.
 Create a `.env.local` file in the project root:
 
 ```bash
-GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 `vite.config.ts` exposes this as:
@@ -112,13 +112,13 @@ Both are used by the frontend Gemini client.
 Inside `analysis_service/`, create a `.env` file:
 
 ```bash
-GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=your_gemini_api_key
 
 # Optional extras if you want the full memory service features:
 DATABASE_URL=sqlite:///./bremi_memory.db
 VERIFY_TOKEN=bremi_secure_token  # WhatsApp webhook verify token
-BREVO_API_KEY=your_brevo_key_if_used
-WHATSAPP_TOKEN=your_whatsapp_token_if_used
+BREVO_API_KEY=your_brevo_key
+WHATSAPP_TOKEN=your_whatsapp_token
 ```
 
 At minimum, the backend needs `GEMINI_API_KEY`.

@@ -16,7 +16,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const storedUser = localStorage.getItem('bremiAI_user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsed: UserProfile = JSON.parse(storedUser);
+        // Ensure preferences exist and default history to ON for all users
+        parsed.preferences = {
+          ...(parsed.preferences || {}),
+          saveHistory: true
+        };
+        setUser(parsed);
+        localStorage.setItem('bremiAI_user', JSON.stringify(parsed));
+      } catch {
+        // If parsing fails, clear the bad value
+        localStorage.removeItem('bremiAI_user');
+      }
     }
   }, []);
 
