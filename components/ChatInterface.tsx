@@ -421,6 +421,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       li: ({ node, ...props }) => <li {...props} className="mb-1" />,
                       a: ({ node, href, ...props }) => {
                         const url = href || '';
+
+                        // Internal Bremi wiki scheme (ideal case)
                         if (url.startsWith('bremi-wiki://')) {
                           const id = url.replace('bremi-wiki://', '');
                           return (
@@ -436,6 +438,32 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                             </button>
                           );
                         }
+
+                        // Fallback: intercept links to the Bremi main domain and route to in-app wiki
+                        try {
+                          const parsed = new URL(url);
+                          if (parsed.hostname.includes('bremi.ai')) {
+                            const segments = parsed.pathname.split('/').filter(Boolean);
+                            const rawId = segments[segments.length - 1] || 'wiki';
+                            const id = rawId.toLowerCase().replace(/-/g, '_');
+                            return (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  openWikiById(id, String(props.children ?? '') || undefined);
+                                }}
+                                className="underline decoration-dotted text-emerald-700 opacity-90 hover:opacity-100"
+                              >
+                                {props.children}
+                              </button>
+                            );
+                          }
+                        } catch {
+                          // If URL parsing fails, fall through to normal link
+                        }
+
+                        // Regular external link
                         return (
                           <a
                             {...props}
