@@ -21,7 +21,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onLogin }) => {
       name: googleUser.name || 'User',
       email: googleUser.email,
       language: selectedLanguage,
-      preferences: { saveHistory: false }
+      preferences: { saveHistory: true }
     };
     onLogin(newUser);
   };

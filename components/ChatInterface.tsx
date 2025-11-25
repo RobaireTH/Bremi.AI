@@ -372,11 +372,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-32 z-10 scroll-smooth">
-        {!user.preferences.saveHistory && messages.length > 1 && (
+        {user.preferences.saveHistory && messages.length > 1 && (
           <div className="flex justify-center opacity-60 hover:opacity-100 transition-opacity">
             <div className="text-[10px] text-slate-500 bg-slate-200/50 px-3 py-1 rounded-full backdrop-blur-sm flex items-center">
               <Icons.Clock className="w-3 h-3 mr-1" />
-              {t.history_off}
+              {t.history_on}
             </div>
           </div>
         )}

@@ -104,7 +104,7 @@ export const TRANSLATIONS = {
     online: "Online",
     sos: "SOS",
     reflect: "Reflect",
-    history_on: "History On",
+    history_on: "Chats are saved on this device. You can turn history off any time.",
     history_off: "History Off",
     breathe_in: "Breathe In",
     hold: "Hold",
@@ -141,7 +141,7 @@ export const TRANSLATIONS = {
     coming_soon_title: "Coming Soon!",
     coming_soon_desc: "We are working hard to bring Bremi.Ai to WhatsApp. Stay tuned!",
     go_back: "Go Back",
-    privacy_notice: "Your privacy comes first. Chats are not saved unless you toggle 'History On'. All data stays locally on your device."
+    privacy_notice: "Your privacy comes first. By default, chats are saved on this device only. You can turn history off at any time if you prefer not to save conversations."
   },
   yo: {
     subtitle: "Ko si idajọ. Ko si wahala. Aye ailewu lati sọ ọkan rẹ jade.",
@@ -155,7 +155,7 @@ export const TRANSLATIONS = {
     online: "Lori ayelujara",
     sos: "SOS",
     reflect: "Ronu",
-    history_on: "Itan Tan",
+    history_on: "Iwiregbe rẹ n jẹ fipamọ sori ẹrọ yii. O le pa itan nigbakugba.",
     history_off: "Itan Pa",
     breathe_in: "Simi Inu",
     hold: "Duro",
@@ -192,7 +192,7 @@ export const TRANSLATIONS = {
     coming_soon_title: "Nbọ Laipe!",
     coming_soon_desc: "A n ṣiṣẹ takuntakun lati mu Bremi.Ai wa si WhatsApp. Duro yi!",
     go_back: "Pada sẹhin",
-    privacy_notice: "Aṣiri rẹ ṣe pataki. A ko fi ọrọ pamọ ayafi ti o ba tan 'Itan'. Awọn data wa lori ẹrọ rẹ."
+    privacy_notice: "Aṣiri rẹ ṣe pataki. Ni aiyipada a n fi iwiregbe pamọ sori ẹrọ rẹ nikan. O le pa itan nigbakugba ti o ba fẹ ki a má fi ohunkóhun pamọ."
   },
   ha: {
     subtitle: "Ba hukunci. Ba wahala. Wuri mai aminci don faɗar ran ku.",
@@ -206,7 +206,7 @@ export const TRANSLATIONS = {
     online: "A kan layi",
     sos: "SOS",
     reflect: "Tunani",
-    history_on: "Tarihi Kunna",
+    history_on: "Ana ajiye tattaunawar ku a kan wannan na'ura. Kuna iya kashe tarihin duk lokacin da kuke so.",
     history_off: "Tarihi Kashe",
     breathe_in: "Ja Numfashi",
     hold: "Rike",
@@ -243,7 +243,7 @@ export const TRANSLATIONS = {
     coming_soon_title: "Yana Zuwa Nan Ba Da Jimawa Ba!",
     coming_soon_desc: "Muna aiki tuƙuru don kawo Bremi.Ai zuwa WhatsApp. Kasance tare da mu!",
     go_back: "Koma baya",
-    privacy_notice: "Sirrinka yana da mahimmanci. Ba a adana hira sai ka kunna 'Tarihi'. Bayanai suna kan na'urarka."
+    privacy_notice: "Sirrinka yana da mahimmanci. A matsayin tsoho, ana ajiye tattaunawa a kan wannan na'ura kawai. Kuna iya kashe tarihin idan ba kwa son a ajiye tattaunawa."
   },
   ig: {
     subtitle: "Enweghị ikpe. Enweghị wahala. Ebe nchekwa iji kwuo uche gị.",
@@ -257,7 +257,7 @@ export const TRANSLATIONS = {
     online: "N'ịntanetị",
     sos: "SOS",
     reflect: "Chee echiche",
-    history_on: "Akụkọ Na-echekwa",
+    history_on: "A na-echekwa nkwurịta okwu gị na ngwaọrụ a. Ị nwere ike gbanyụọ akụkọ ọ bụla oge.",
     history_off: "Akụkọ Gbanyụọ",
     breathe_in: "Kuo ume",
     hold: "Jide",
@@ -294,6 +294,6 @@ export const TRANSLATIONS = {
     coming_soon_title: "Na-abịa n'oge na-adịghị anya!",
     coming_soon_desc: "A na-arụsi ọrụ ike iji weta Bremi.Ai na WhatsApp. Nọrọ na-eche!",
     go_back: "Gaa azụ",
-    privacy_notice: "Nzuzo gị dị mkpa. A naghị echekwa nkata ọ gwụla ma ị gbanyere 'Akụkọ'. Data niile na-anọ na ngwaọrụ gị."
+    privacy_notice: "Nzuzo gị dị mkpa. N’ala mbụ, a na-echekwa nkata gị na ngwaọrụ a naanị. Ị nwere ike gbanyụọ akụkọ ma ọ bụrụ na ịchọghị ka e chekwaa mkparịta ụka gị."
   }
 };

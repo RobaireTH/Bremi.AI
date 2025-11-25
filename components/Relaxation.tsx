@@ -182,7 +182,7 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-green-50 p-4 md:p-6 relative overflow-hidden">
+    <div className="h-full flex flex-col bg-green-50 p-4 md:p-6 relative overflow-y-auto">
       <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-green-100/50 to-transparent pointer-events-none"></div>
 
       <div className="relative z-10 mb-4">
