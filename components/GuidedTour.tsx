@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Icons } from '../constants';
 
 interface GuidedTourProps {
   onFinish: () => void;
+  onStepChange?: (index: number) => void;
 }
 
 const STEPS = [
@@ -12,7 +13,7 @@ const STEPS = [
   },
   {
     title: 'Chat Space',
-    body: 'This main screen is where we talk. I will ask gentle questions, help you challenge unhelpful thoughts, and sometimes highlight mind patterns like “Burnout” or “Rumination” so you can understand them better.',
+    body: 'This main screen is where we talk. I will ask gentle questions, help you challenge unhelpful thoughts, and you can tap the Reflect button to see a short summary, thought patterns, and a suggested care plan for your session.',
   },
   {
     title: 'Relax & Calm Tools',
@@ -20,11 +21,11 @@ const STEPS = [
   },
   {
     title: 'Psycho-education & Privacy',
-    body: "When I notice patterns, I may suggest reading a short Bremi-Wiki card to learn what’s happening and why. By default your chats are saved locally on this device only, and you can turn history off any time.",
+    body: "When I notice patterns, I may suggest reading a short Bremi-Wiki card to learn what’s happening and why. You’ll also see a small notice about whether chats are being saved on this device, and you can turn history off any time if you prefer.",
   },
 ];
 
-export const GuidedTour: React.FC<GuidedTourProps> = ({ onFinish }) => {
+export const GuidedTour: React.FC<GuidedTourProps> = ({ onFinish, onStepChange }) => {
   const [stepIndex, setStepIndex] = useState(0);
 
   const isLast = stepIndex === STEPS.length - 1;
@@ -33,12 +34,21 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({ onFinish }) => {
     if (isLast) {
       onFinish();
     } else {
-      setStepIndex((i) => i + 1);
+      setStepIndex((i) => {
+        const nextIndex = i + 1;
+        if (onStepChange) onStepChange(nextIndex);
+        return nextIndex;
+      });
     }
   };
 
   const back = () => {
-    setStepIndex((i) => (i > 0 ? i - 1 : i));
+    setStepIndex((i) => {
+      if (i === 0) return i;
+      const prevIndex = i - 1;
+      if (onStepChange) onStepChange(prevIndex);
+      return prevIndex;
+    });
   };
 
   const skip = () => {
@@ -47,9 +57,56 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({ onFinish }) => {
 
   const step = STEPS[stepIndex];
 
+  const POINTER_CONFIG: Array<
+    | {
+        className: string;
+        label: string;
+      }
+    | null
+  > = [
+    {
+      // Step 0 - general chat area
+      className: 'bottom-[120px] left-1/2 -translate-x-1/2',
+      label: 'This is your main chat space with Bremi.',
+    },
+    {
+      // Step 1 - Reflect button (top-right Brain icon)
+      className: 'top-[56px] right-[88px]',
+      label: 'Use Reflect to see insights and a suggested care plan after a chat.',
+    },
+    {
+      // Step 2 - Relax tab / calm tools (bottom nav area)
+      className: 'bottom-[90px] left-1/4 -translate-x-1/2',
+      label: 'Here you can open the Relax tab and use calming tools.',
+    },
+    {
+      // Step 3 - wiki chips & history notice near top of chat
+      className: 'top-[120px] right-6',
+      label: 'You will see mind-pattern highlights and privacy info here.',
+    },
+  ];
+
+  useEffect(() => {
+    if (onStepChange) {
+      onStepChange(stepIndex);
+    }
+  }, []);
+
   return (
-    <div className="absolute inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-      <div className="bg-white w-full md:max-w-md md:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="absolute inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 pointer-events-none">
+      {/* Pointer bubble */}
+      {POINTER_CONFIG[stepIndex] && (
+        <div
+          className={`absolute ${POINTER_CONFIG[stepIndex]!.className} flex flex-col items-center gap-1 pointer-events-none`}
+        >
+          <div className="w-3 h-3 rounded-full bg-emerald-400 animate-ping" />
+          <div className="px-3 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-medium shadow-md">
+            {POINTER_CONFIG[stepIndex]!.label}
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white w-full md:max-w-md md:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col pointer-events-auto">
         <div className="bg-slate-900 p-4 text-white flex justify-between items-center">
           <div className="flex items-center">
             <div className="bg-white/10 p-2 rounded-lg mr-3">

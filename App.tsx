@@ -121,6 +121,18 @@ function AppContent() {
             }
             setShowTour(false);
           }}
+          onStepChange={(index) => {
+            // Map tour steps to underlying views so users "feel" the right background
+            // Step 0: Welcome        -> Chat
+            // Step 1: Chat Space     -> Chat
+            // Step 2: Relax & Calm   -> Relaxation
+            // Step 3: Wiki & Privacy -> Chat
+            if (index === 2) {
+              setCurrentView('relaxation');
+            } else {
+              setCurrentView('chat');
+            }
+          }}
         />
       )}
 
