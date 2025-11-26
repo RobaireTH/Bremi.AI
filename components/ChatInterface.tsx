@@ -84,6 +84,111 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     };
   }, []);
 
+  type CarePlan = {
+    title: string;
+    calmTools: string[];
+    wikiTopics: string[];
+    microHabits: string[];
+  };
+
+  const buildCarePlan = (analysis: AnalysisResult): CarePlan => {
+    const themesText = (analysis.themes || []).join(' ').toLowerCase();
+    const distortionsText = (analysis.distortions || []).join(' ').toLowerCase();
+
+    const calmTools = new Set<string>();
+    const wikiTopics = new Set<string>();
+    const microHabits = new Set<string>();
+
+    const addAnxietyPlan = () => {
+      calmTools.add('4-7-8 Breathing Calm');
+      calmTools.add('5–4–3–2–1 Grounding');
+      calmTools.add('Safe Place Visualisation');
+      wikiTopics.add('Catastrophizing');
+      wikiTopics.add('Hypervigilance');
+      microHabits.add('Once a day, pause for 2 minutes to do one slow 4-7-8 breathing cycle before checking your phone or messages.');
+      microHabits.add('When you notice a worry spike, gently ask yourself: “Is this a fact, or a fear story my mind is telling?”');
+    };
+
+    const addBurnoutPlan = () => {
+      calmTools.add('Gentle Body Scan');
+      calmTools.add('Muscle Relax (Progressive Muscle Relaxation)');
+      wikiTopics.add('Burnout');
+      wikiTopics.add('Rumination');
+      microHabits.add('Schedule one small “no guilt” rest block this week (15–20 minutes) where you do something that is not productive, just restorative.');
+      microHabits.add('At the end of each day, write down one thing you did that was “enough” for today, even if the day felt messy.');
+    };
+
+    const addSelfWorthPlan = () => {
+      calmTools.add('Self-Compassion Break');
+      calmTools.add('Safe Place Visualisation');
+      wikiTopics.add('Rejection Sensitivity');
+      wikiTopics.add('Imposter Syndrome');
+      microHabits.add('Once a day, write or say one sentence to yourself that you would say to a close friend in your exact situation.');
+      microHabits.add('Notice one moment where you handled something better than your brain gives you credit for, and name it clearly.');
+    };
+
+    const addOverthinkingPlan = () => {
+      calmTools.add('5–4–3–2–1 Grounding');
+      calmTools.add('4-7-8 Breathing Calm');
+      wikiTopics.add('Rumination');
+      microHabits.add('Set a 10–minute “worry window” once a day where you allow all the worries to show up, then gently park them in a note and return to your present task.');
+      microHabits.add('When you catch yourself replaying a conversation, ask: “What part of this is actually in my control right now?”');
+    };
+
+    if (
+      themesText.includes('anxiety') ||
+      themesText.includes('panic') ||
+      distortionsText.includes('catastroph') ||
+      distortionsText.includes('catastrophizing')
+    ) {
+      addAnxietyPlan();
+    }
+
+    if (
+      themesText.includes('burnout') ||
+      themesText.includes('exhaust') ||
+      themesText.includes('tired') ||
+      themesText.includes('drained')
+    ) {
+      addBurnoutPlan();
+    }
+
+    if (
+      themesText.includes('self-esteem') ||
+      themesText.includes('self worth') ||
+      themesText.includes('rejection') ||
+      distortionsText.includes('self-criticism') ||
+      distortionsText.includes('worthless')
+    ) {
+      addSelfWorthPlan();
+    }
+
+    if (
+      themesText.includes('overthinking') ||
+      themesText.includes('can\'t stop thinking') ||
+      distortionsText.includes('rumination') ||
+      distortionsText.includes('overgeneralization')
+    ) {
+      addOverthinkingPlan();
+    }
+
+    // If nothing matched, fall back to a gentle generic plan
+    if (!calmTools.size && !wikiTopics.size && !microHabits.size) {
+      calmTools.add('4-7-8 Breathing Calm');
+      calmTools.add('Gentle Body Scan');
+      wikiTopics.add('Rumination');
+      microHabits.add('Take one slow, intentional breath before you reply to messages or emails that feel emotionally loaded.');
+      microHabits.add('Once a day, ask yourself: “What do I need right now — rest, reassurance, or a tiny action?” and honour the answer in a small way.');
+    }
+
+    return {
+      title: 'Suggested Care Plan',
+      calmTools: Array.from(calmTools),
+      wikiTopics: Array.from(wikiTopics),
+      microHabits: Array.from(microHabits),
+    };
+  };
+
   const findWikiMatches = (text: string): PsychoWikiEntry[] => {
     const lower = text.toLowerCase();
     return PSYCHO_WIKI.filter((entry) =>
@@ -619,6 +724,52 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     </span>
                   ))}
                 </div>
+              </div>
+
+              {/* Care Plan */}
+              <div className="bg-white p-4 rounded-2xl border border-green-100 shadow-sm">
+                <h4 className="text-[10px] font-bold text-green-700 uppercase tracking-wider mb-2">
+                  Suggested Care Plan
+                </h4>
+                {(() => {
+                  const plan = buildCarePlan(analysisResult);
+                  return (
+                    <div className="space-y-3 text-sm text-slate-700">
+                      <div>
+                        <p className="text-xs font-semibold text-slate-500 mb-1">
+                          Calm tools to try this week
+                        </p>
+                        <ul className="list-disc list-inside space-y-1">
+                          {plan.calmTools.map((tool) => (
+                            <li key={tool}>{tool}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      {plan.wikiTopics.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 mb-1">
+                            Mind patterns to read about
+                          </p>
+                          <ul className="list-disc list-inside space-y-1">
+                            {plan.wikiTopics.map((topic) => (
+                              <li key={topic}>{topic}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-semibold text-slate-500 mb-1">
+                          Tiny daily experiments
+                        </p>
+                        <ul className="list-disc list-inside space-y-1">
+                          {plan.microHabits.map((habit, idx) => (
+                            <li key={idx}>{habit}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100/50 shadow-sm">
