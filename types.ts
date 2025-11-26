@@ -9,6 +9,7 @@ export interface UserProfile {
   language: Language;
   preferences: {
     saveHistory: boolean;
+    hasSeenTour?: boolean;
   };
 }
 

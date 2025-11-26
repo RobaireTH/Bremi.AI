@@ -11,6 +11,7 @@ import { ComingSoon } from './components/ComingSoon';
 import { AppView, UserProfile } from './types';
 import { UserProvider, useUser } from './contexts/UserContext';
 import { SessionProvider, useSession } from './contexts/SessionContext';
+import { GuidedTour } from './components/GuidedTour';
 
 function AppContent() {
   const { user, login, logout, updateUser } = useUser();
@@ -18,6 +19,7 @@ function AppContent() {
 
   const [currentView, setCurrentView] = useState<AppView>('onboarding');
   const [showEmergency, setShowEmergency] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   // Sync view with user state
   useEffect(() => {
@@ -25,8 +27,12 @@ function AppContent() {
       if (currentView === 'onboarding') {
         setCurrentView('chat');
       }
+      if (user.preferences?.hasSeenTour === false || user.preferences?.hasSeenTour === undefined) {
+        setShowTour(true);
+      }
     } else {
       setCurrentView('onboarding');
+      setShowTour(false);
     }
   }, [user]);
 
@@ -98,6 +104,25 @@ function AppContent() {
           />
         )}
       </main>
+
+      {/* Guided Tour Overlay */}
+      {user && showTour && currentView !== 'onboarding' && !showEmergency && (
+        <GuidedTour
+          onFinish={() => {
+            if (user) {
+              const updated: UserProfile = {
+                ...user,
+                preferences: {
+                  ...user.preferences,
+                  hasSeenTour: true,
+                },
+              };
+              updateUser(updated);
+            }
+            setShowTour(false);
+          }}
+        />
+      )}
 
       {/* Emergency Overlay Modal */}
       {showEmergency && user && (

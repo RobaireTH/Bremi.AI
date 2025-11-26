@@ -18,10 +18,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (storedUser) {
       try {
         const parsed: UserProfile = JSON.parse(storedUser);
-        // Ensure preferences exist and default history to ON for all users
+        // Ensure preferences exist and default history/tour flags for all users
         parsed.preferences = {
           ...(parsed.preferences || {}),
-          saveHistory: true
+          saveHistory: true,
+          hasSeenTour: parsed.preferences?.hasSeenTour ?? false
         };
         setUser(parsed);
         localStorage.setItem('bremiAI_user', JSON.stringify(parsed));
