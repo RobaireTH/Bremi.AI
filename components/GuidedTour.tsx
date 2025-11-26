@@ -93,7 +93,7 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({ onFinish, onStepChange }
   }, []);
 
   return (
-    <div className="absolute inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 pointer-events-none">
+    <div className="absolute inset-0 z-40 bg-black/40 flex items-end md:items-center justify-center p-0 md:p-4 pointer-events-none">
       {/* Pointer bubble */}
       {POINTER_CONFIG[stepIndex] && (
         <div
