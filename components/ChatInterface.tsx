@@ -775,9 +775,32 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100/50 shadow-sm">
                 <div className="flex items-start">
                   <Icons.Sparkles className="w-5 h-5 text-indigo-500 mt-0.5 mr-3 flex-shrink-0" />
-                  <p className="text-slate-700 text-sm italic leading-relaxed">
-                    "{analysisResult.feedback}"
-                  </p>
+                  <div className="text-slate-700 text-sm italic leading-relaxed">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ node, ...props }) => <p {...props} className="mb-1 last:mb-0" />,
+                        ul: ({ node, ...props }) => <ul {...props} className="list-disc list-inside mb-1" />,
+                        ol: ({ node, ...props }) => <ol {...props} className="list-decimal list-inside mb-1" />,
+                        li: ({ node, ...props }) => <li {...props} className="mb-0.5" />,
+                        a: ({ node, ...props }) => (
+                          <a
+                            {...props}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline opacity-90 hover:opacity-100"
+                          />
+                        ),
+                        strong: ({ node, ...props }) => <strong {...props} className="font-bold" />,
+                        em: ({ node, ...props }) => <em {...props} className="italic" />,
+                        code: ({ node, ...props }) => (
+                          <code {...props} className="bg-black/10 rounded px-1 py-0.5 text-xs font-mono" />
+                        ),
+                      }}
+                    >
+                      {analysisResult.feedback}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
 
@@ -799,9 +822,44 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Reframing Suggestions</h4>
                 <div className="space-y-3">
                   {analysisResult.suggestions.map((suggestion, i) => (
-                    <div key={i} className="flex items-start bg-white p-3.5 rounded-xl border border-green-100 shadow-sm">
+                    <div
+                      key={i}
+                      className="flex items-start bg-white p-3.5 rounded-xl border border-green-100 shadow-sm"
+                    >
                       <Icons.CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-green-900 leading-relaxed">{suggestion}</span>
+                      <div className="text-sm text-green-900 leading-relaxed">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            p: ({ node, ...props }) => <p {...props} className="mb-1 last:mb-0" />,
+                            ul: ({ node, ...props }) => (
+                              <ul {...props} className="list-disc list-inside mb-1" />
+                            ),
+                            ol: ({ node, ...props }) => (
+                              <ol {...props} className="list-decimal list-inside mb-1" />
+                            ),
+                            li: ({ node, ...props }) => <li {...props} className="mb-0.5" />,
+                            a: ({ node, ...props }) => (
+                              <a
+                                {...props}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline opacity-90 hover:opacity-100"
+                              />
+                            ),
+                            strong: ({ node, ...props }) => <strong {...props} className="font-bold" />,
+                            em: ({ node, ...props }) => <em {...props} className="italic" />,
+                            code: ({ node, ...props }) => (
+                              <code
+                                {...props}
+                                className="bg-black/10 rounded px-1 py-0.5 text-xs font-mono"
+                              />
+                            ),
+                          }}
+                        >
+                          {suggestion}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   ))}
                 </div>
