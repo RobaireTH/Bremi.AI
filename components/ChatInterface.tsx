@@ -57,6 +57,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+  const speakRequestIdRef = useRef(0);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -356,6 +357,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         } catch (e) {}
         audioContextRef.current = null;
       }
+      // Invalidate any in-flight TTS requests
+      speakRequestIdRef.current += 1;
       setLoadingAudioId(null);
       return;
     }
@@ -369,12 +372,22 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       audioContextRef.current = null;
     }
 
+    const requestId = ++speakRequestIdRef.current;
+
+    // Avoid very long TTS payloads to reduce latency
+    const trimmedText = text.length > 800 ? text.slice(0, 800) : text;
+
     setLoadingAudioId(id);
 
     try {
-      const base64Audio = await generateSpeech(text);
+      const base64Audio = await generateSpeech(trimmedText);
 
       if (!base64Audio) throw new Error("No audio data received");
+
+      // If another request started or this one was cancelled, abort
+      if (speakRequestIdRef.current !== requestId || loadingAudioId !== id) {
+        return;
+      }
 
       const binaryString = window.atob(base64Audio);
       const len = binaryString.length;
@@ -402,7 +415,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       sourceNodeRef.current = source;
 
       source.onended = () => {
-        setLoadingAudioId(null);
+        if (speakRequestIdRef.current === requestId) {
+          setLoadingAudioId(null);
+        }
       };
 
     } catch (e) {

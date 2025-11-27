@@ -27,6 +27,7 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+  const guideRequestIdRef = useRef(0);
 
   // 4-7-8 Breathing Technique logic
   useEffect(() => {
@@ -102,6 +103,8 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
         } catch (e) {}
         audioContextRef.current = null;
       }
+      // Invalidate any in-flight guide requests
+      guideRequestIdRef.current += 1;
       setActiveAudioId(null);
       return;
     }
@@ -119,10 +122,20 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
       audioContextRef.current = null;
     }
 
+    const requestId = ++guideRequestIdRef.current;
+
+    // Limit length to keep TTS snappy
+    const trimmedText = text.length > 800 ? text.slice(0, 800) : text;
+
     setActiveAudioId(id);
     try {
-      const base64Audio = await generateSpeech(text);
+      const base64Audio = await generateSpeech(trimmedText);
       if (!base64Audio) throw new Error('No audio data received');
+
+      // If another request started or this one was cancelled, abort
+      if (guideRequestIdRef.current !== requestId || activeAudioId !== id) {
+        return;
+      }
 
       const binaryString = window.atob(base64Audio);
       const len = binaryString.length;
@@ -150,7 +163,9 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
       sourceNodeRef.current = source;
 
       source.onended = () => {
-        setActiveAudioId(null);
+        if (guideRequestIdRef.current === requestId) {
+          setActiveAudioId(null);
+        }
       };
     } catch (e) {
       console.error('Failed to play guide audio', e);
