@@ -5,7 +5,6 @@ import httpx
 from typing import Optional, Dict, Any
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class WhatsAppService:
@@ -14,15 +13,29 @@ class WhatsAppService:
         self.phone_number_id = os.getenv("PHONE_NUMBER_ID")
         self.api_version = os.getenv("WHATSAPP_API_VERSION", "v17.0")
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
+        self.environment = os.getenv("ENVIRONMENT", os.getenv("APP_ENV", "development")).lower()
+        self.mock_mode = os.getenv("WHATSAPP_MOCK_MODE", "false").lower() == "true"
         
+        # In production-like environments, fail fast if credentials are missing
+        if self.environment in ("production", "staging") and (not self.api_token or not self.phone_number_id):
+            logger.error("WhatsApp credentials are required in production/staging. "
+                         "Set WHATSAPP_ACCESS_TOKEN and PHONE_NUMBER_ID.")
+            raise ValueError("Missing WhatsApp credentials in production/staging.")
+
         if not self.api_token or not self.phone_number_id:
-            logger.warning("WhatsApp credentials not set. Messages will not be sent.")
+            logger.warning(
+                "WhatsApp credentials not fully set. Running in MOCK mode; "
+                "messages will be logged but not sent to the WhatsApp Cloud API."
+            )
+            self.mock_mode = True
+        elif self.mock_mode:
+            logger.info("WhatsAppService started in explicit MOCK mode. No real messages will be sent.")
 
     async def send_message(self, to_number: str, text: str) -> bool:
         """
         Sends a text message to a WhatsApp user asynchronously.
         """
-        if not self.api_token or not self.phone_number_id:
+        if self.mock_mode or not self.api_token or not self.phone_number_id:
             logger.info(f"[MOCK SEND] To: {to_number}, Message: {text}")
             return True
 
@@ -44,7 +57,7 @@ class WhatsAppService:
             }
         }
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=5.0)) as client:
             try:
                 response = await client.post(url, headers=headers, json=payload)
                 response.raise_for_status()
@@ -64,7 +77,8 @@ class WhatsAppService:
         """
         Marks a message as read asynchronously.
         """
-        if not self.api_token or not self.phone_number_id:
+        if self.mock_mode or not self.api_token or not self.phone_number_id:
+            # In mock mode we consider this a no-op success to keep flows simple.
             return True
 
         url = f"{self.base_url}/{self.phone_number_id}/messages"
@@ -80,7 +94,7 @@ class WhatsAppService:
             "message_id": message_id
         }
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=5.0)) as client:
             try:
                 response = await client.post(url, headers=headers, json=payload)
                 response.raise_for_status()

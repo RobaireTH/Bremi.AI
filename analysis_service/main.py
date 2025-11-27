@@ -2,6 +2,7 @@ import uvicorn
 import logging
 from fastapi import FastAPI, Depends, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from sqlalchemy.orm import Session
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
@@ -178,11 +179,13 @@ async def verify_webhook(
     Verifies the webhook with WhatsApp.
     """
     verify_token = os.getenv("VERIFY_TOKEN", "bremi_secure_token")
-    
+
     if mode == "subscribe" and token == verify_token:
         logger.info("WEBHOOK_VERIFIED")
-        return int(challenge)
-    
+        # Meta expects the raw challenge value echoed back as plain text.
+        return PlainTextResponse(content=challenge)
+
+    logger.warning("Invalid webhook verification attempt: mode=%s token=%s", mode, token)
     raise HTTPException(status_code=403, detail="Verification failed")
 
 @app.post("/whatsapp/webhook")
