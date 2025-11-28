@@ -712,7 +712,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Analysis Overlay Modal */}
       {analysisResult && (
-        <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
           <div className="bg-white w-full md:max-w-md md:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-slide-up">
             <div className="bg-slate-900 p-5 text-white flex justify-between items-center">
               <div className="flex items-center">
@@ -895,7 +895,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Psychoanalysis Wiki Overlay */}
       {activeWikiEntry && (
-        <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
           <div className="bg-white w-full md:max-w-md md:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-slide-up">
             <div className="bg-emerald-900 p-5 text-white flex justify-between items-center">
               <div className="flex items-center">
