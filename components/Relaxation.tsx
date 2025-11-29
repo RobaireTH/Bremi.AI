@@ -531,43 +531,223 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
 
             <div className="p-4 md:p-6 overflow-y-auto flex-1 bg-green-50/40">
               <div className="grid grid-cols-1 md:grid-cols-[2fr,1.5fr] gap-4 md:gap-6">
-                {/* Reuse main exercise area */}
-        <div className="flex flex-col items-center justify-center bg-gradient-to-b from-green-100/60 to-green-50 rounded-3xl p-4 md:p-6 shadow-sm border border-green-100/70">
-          <div className="flex items-center justify-between w-full mb-4">
-            <h3 className="text-lg font-semibold text-green-900">
-              {selectedTool === '478_breathing' && '4-7-8 Breathing Calm'}
-              {selectedTool === 'box_breathing' && 'Box Breathing Reset'}
-              {selectedTool === 'grounding_54321' && '5–4–3–2–1 Grounding'}
-              {selectedTool === 'body_scan' && 'Gentle Body Scan'}
-              {selectedTool === 'pmr' && 'Progressive Muscle Relaxation'}
-              {selectedTool === 'safe_place' && 'Safe Place Visualisation'}
-              {selectedTool === 'self_compassion' && 'Self-Compassion Break'}
-            </h3>
-            <button
-              onClick={() => speakGuide(selectedTool, getGuideText())}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-white/70 text-green-800 border border-green-200 hover:bg-white transition-colors shadow-sm"
-            >
-              {activeAudioId === selectedTool ? (
-                <>
-                  <Icons.X className="w-3.5 h-3.5" />
-                  <span>Stop</span>
-                </>
-              ) : (
-                <>
-                  <Icons.Speaker className="w-3.5 h-3.5" />
-                  <span>Guided voice</span>
-                </>
-              )}
-            </button>
-          </div>
+                {/* Calm exercise area, per tool */}
+                <div className="flex flex-col items-center justify-center bg-gradient-to-b from-green-100/60 to-green-50 rounded-3xl p-4 md:p-6 shadow-sm border border-green-100/70">
+                  <div className="flex items-center justify-between w-full mb-4">
+                    <h3 className="text-lg font-semibold text-green-900">
+                      {selectedTool === '478_breathing' && '4-7-8 Breathing Calm'}
+                      {selectedTool === 'box_breathing' && 'Box Breathing Reset'}
+                      {selectedTool === 'grounding_54321' && '5–4–3–2–1 Grounding'}
+                      {selectedTool === 'body_scan' && 'Gentle Body Scan'}
+                      {selectedTool === 'pmr' && 'Progressive Muscle Relaxation'}
+                      {selectedTool === 'safe_place' && 'Safe Place Visualisation'}
+                      {selectedTool === 'self_compassion' && 'Self-Compassion Break'}
+                    </h3>
+                    <button
+                      onClick={() => speakGuide(selectedTool, getGuideText())}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-white/70 text-green-800 border border-green-200 hover:bg-white transition-colors shadow-sm"
+                    >
+                      {activeAudioId === selectedTool ? (
+                        <>
+                          <Icons.X className="w-3.5 h-3.5" />
+                          <span>Stop</span>
+                        </>
+                      ) : (
+                        <>
+                          <Icons.Speaker className="w-3.5 h-3.5" />
+                          <span>Guided voice</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
 
-                  {/* We keep the same body as main area, but rely on current selectedTool blocks */}
-                  {/* To avoid duplication, show a short hint instead of re-implementing all steps */}
-              <p className="text-xs text-green-900/80 max-w-sm text-center">
-                    Use the tool picker on the right to change the exercise. The main Relax screen
-                    will update to match your choice.
-              </p>
-            </div>
+                  {selectedTool === '478_breathing' && (
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="relative flex items-center justify-center mb-10">
+                        <div
+                          className={`
+                            w-64 h-64 rounded-full bg-green-400/20 backdrop-blur-sm absolute
+                            transition-all duration-[4000ms] ease-in-out
+                            ${step === 'inhale' ? 'scale-100 opacity-100' : ''}
+                            ${step === 'hold' ? 'scale-100 opacity-80' : ''}
+                            ${step === 'exhale' ? 'scale-50 opacity-50' : ''}
+                          `}
+                        ></div>
+
+                        <div
+                          className={`
+                            w-48 h-48 rounded-full bg-green-500 shadow-2xl shadow-green-200 flex items-center justify-center text-white font-bold text-xl z-10
+                            transition-all duration-[4000ms] ease-in-out
+                            ${step === 'inhale' ? 'scale-110' : ''}
+                            ${step === 'hold' ? 'scale-110' : ''}
+                            ${step === 'exhale' ? 'scale-90' : ''}
+                          `}
+                        >
+                          <div className="flex flex-col items-center">
+                            <span className="text-2xl mb-1">{instruction}</span>
+                            <span className="text-4xl font-light">{seconds > 0 ? seconds : ''}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-green-900/80 max-w-sm text-center">
+                        Breathe in for 4, hold for 7, exhale for 8. Let your shoulders drop and your jaw
+                        unclench as you follow the circle.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedTool === 'box_breathing' && (
+                    <div className="flex flex-col items-center justify-center space-y-6">
+                      <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+                        {['Inhale 4s', 'Hold 4s', 'Exhale 4s', 'Rest 4s'].map((label, i) => (
+                          <div
+                            key={label}
+                            className="rounded-2xl bg-white/80 border border-green-100 px-4 py-5 text-center shadow-sm"
+                          >
+                            <p className="text-xs uppercase tracking-wide text-green-600 mb-1">
+                              Step {i + 1}
+                            </p>
+                            <p className="font-semibold text-green-900">{label}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-green-900/80 max-w-sm text-center">
+                        Imagine tracing a square with your breath. Same length for breathing in, holding,
+                        breathing out, and pausing.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedTool === 'grounding_54321' && (
+                    <div className="flex flex-col items-start justify-center space-y-3 max-w-md">
+                      {[
+                        '5 things you can see around you.',
+                        '4 things you can feel with your body.',
+                        '3 things you can hear.',
+                        '2 things you can smell.',
+                        '1 thing you can taste or imagine tasting.',
+                      ].map((text, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-3 bg-white/80 border border-green-100 rounded-2xl px-4 py-3 shadow-sm w-full"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">
+                            {5 - i}
+                          </div>
+                          <p className="text-sm text-slate-800">{text}</p>
+                        </div>
+                      ))}
+                      <p className="text-xs text-green-900/80">
+                        This pulls your mind out of spiralling thoughts and back into the safety of the
+                        present moment.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedTool === 'body_scan' && (
+                    <div className="flex flex-col items-start justify-center space-y-3 max-w-md">
+                      {[
+                        'Notice your forehead, eyes and jaw. Soften them slightly.',
+                        'Drop your shoulders away from your ears. Let your chest and back loosen.',
+                        'Bring awareness to your belly, hips and lower back. Breathe into that space.',
+                        'Scan down your legs, knees, ankles and feet. Notice any points of contact with the floor.',
+                      ].map((text, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-3 bg-white/80 border border-green-100 rounded-2xl px-4 py-3 shadow-sm w-full"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">
+                            {i + 1}
+                          </div>
+                          <p className="text-sm text-slate-800">{text}</p>
+                        </div>
+                      ))}
+                      <p className="text-xs text-green-900/80">
+                        You do not need to force your body to relax. Just notice, breathe, and give it
+                        gentle permission to soften.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedTool === 'pmr' && (
+                    <div className="flex flex-col items-start justify-center space-y-3 max-w-md">
+                      {[
+                        'Clench your fists gently as you breathe in, then release them fully as you breathe out.',
+                        'Tense your forearms and upper arms for a moment, then let them drop heavy by your side.',
+                        'Raise your shoulders slightly towards your ears, hold, then let them fall and soften.',
+                        'Squeeze the muscles in your face — eyes, jaw, cheeks — then relax them and allow your tongue to rest.',
+                        'Gently tighten your belly and lower back, then breathe out and let that area loosen.',
+                        'Press your legs and feet into the floor or bed, then release and notice the heaviness.',
+                      ].map((text, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-3 bg-white/80 border border-green-100 rounded-2xl px-4 py-3 shadow-sm w-full"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">
+                            {i + 1}
+                          </div>
+                          <p className="text-sm text-slate-800">{text}</p>
+                        </div>
+                      ))}
+                      <p className="text-xs text-green-900/80">
+                        If any area feels painful when tensed, skip it. The aim is to teach your body the
+                        feeling of letting go, not to force anything.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedTool === 'safe_place' && (
+                    <div className="flex flex-col items-start justify-center space-y-3 max-w-md">
+                      {[
+                        'Imagine a place where you feel safe or at peace — it could be a beach, your village, your room, or somewhere totally imagined.',
+                        'Notice what you can see there: colours, shapes, light, shadows.',
+                        'Listen for the sounds: breeze, distant traffic, gospel music, laughter, birds, or quiet.',
+                        'Notice the temperature on your skin, and what you are sitting or lying on.',
+                        'Picture someone or something that makes you feel supported here, even if it is just the presence of God, nature, or an older, calmer version of you.',
+                      ].map((text, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-3 bg-white/80 border border-green-100 rounded-2xl px-4 py-3 shadow-sm w-full"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">
+                            {i + 1}
+                          </div>
+                          <p className="text-sm text-slate-800">{text}</p>
+                        </div>
+                      ))}
+                      <p className="text-xs text-green-900/80">
+                        You can return to this safe place in your mind whenever reality feels rough. With
+                        practice, your body will learn to relax faster each time.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedTool === 'self_compassion' && (
+                    <div className="flex flex-col items-start justify-center space-y-3 max-w-md">
+                      {[
+                        'Pause and gently name what you are feeling: for example, “I feel anxious and overwhelmed right now.”',
+                        'Remind yourself: “I am not the only one who feels like this. Many people struggle with this too.”',
+                        'Place a hand on your chest, belly, or cheek and notice the warmth or pressure.',
+                        'Say something kind to yourself, the way you would talk to a beloved friend in the same situation.',
+                        'If words feel hard, you can simply breathe and repeat a short phrase like “Easy, small small” or “I am trying my best.”',
+                      ].map((text, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-3 bg-white/80 border border-green-100 rounded-2xl px-4 py-3 shadow-sm w-full"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">
+                            {i + 1}
+                          </div>
+                          <p className="text-sm text-slate-800">{text}</p>
+                        </div>
+                      ))}
+                      <p className="text-xs text-green-900/80">
+                        Self-compassion is a skill that grows with practice. Awkwardness at first does not
+                        mean you are doing it wrong.
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                 {/* Calm Tools picker */}
           <div className="bg-white rounded-3xl p-4 shadow-sm border border-green-100">
