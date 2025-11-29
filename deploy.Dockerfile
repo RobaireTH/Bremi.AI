@@ -6,15 +6,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install Python dependencies for the analysis_service
+
 COPY analysis_service/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy only the analysis_service code into the image
+
 COPY analysis_service/ .
 
-# (Optional) Document the default port; Render will inject $PORT
+# Document the default port; Render will inject $PORT
 EXPOSE 8000
 
-# main.py reads PORT from the environment (Render sets this automatically)
 CMD ["python", "main.py"]
