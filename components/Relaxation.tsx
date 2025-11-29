@@ -53,10 +53,12 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [pinInput, setPinInput] = useState('');
+  const [expandedEntries, setExpandedEntries] = useState<Record<string, boolean>>({});
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
   const guideRequestIdRef = useRef(0);
+  const journalTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     try {
@@ -301,6 +303,28 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
     }
   };
 
+  const insertAtCursor = (snippet: string) => {
+    const el = journalTextareaRef.current;
+    if (!el) {
+      setNewJournalText((prev) => prev + snippet);
+      return;
+    }
+    const start = el.selectionStart ?? newJournalText.length;
+    const end = el.selectionEnd ?? newJournalText.length;
+    const before = newJournalText.slice(0, start);
+    const after = newJournalText.slice(end);
+    const next = before + snippet + after;
+    setNewJournalText(next);
+
+    // Restore cursor position after React updates
+    requestAnimationFrame(() => {
+      const pos = start + snippet.length;
+      el.selectionStart = pos;
+      el.selectionEnd = pos;
+      el.focus();
+    });
+  };
+
   return (
     <div className="h-full flex flex-col bg-green-50 p-4 md:p-6 relative overflow-y-auto">
       <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-green-100/50 to-transparent pointer-events-none"></div>
@@ -381,7 +405,7 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
         </button>
       </div>
 
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-[2fr,1.5fr] gap-4 md:gap-6 flex-1">
+      <div className="relative z-10 flex-1 flex flex-col">
         {/* Main Exercise Area */}
         <div className="flex flex-col items-center justify-center bg-gradient-to-b from-green-100/60 to-green-50 rounded-3xl p-4 md:p-6 shadow-sm border border-green-100/70">
           <div className="flex items-center justify-between w-full mb-4">
@@ -598,134 +622,6 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
               </p>
             </div>
           )}
-        </div>
-
-        {/* Right Column: Tool Picker + Wiki */}
-        <div className="flex flex-col gap-4">
-          <div className="bg-white rounded-3xl p-4 shadow-sm border border-green-100">
-            <h4 className="text-xs font-semibold text-green-800 uppercase tracking-wider mb-2">
-              Calm Tools
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedTool('478_breathing')}
-                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                  selectedTool === '478_breathing'
-                    ? 'bg-green-600 text-white border-green-600 shadow-md'
-                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                }`}
-              >
-                <p className="font-semibold">4-7-8 Breathing</p>
-                <p className="text-[11px] opacity-80 mt-0.5">Nervous system reset</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTool('box_breathing')}
-                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                  selectedTool === 'box_breathing'
-                    ? 'bg-green-600 text-white border-green-600 shadow-md'
-                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                }`}
-              >
-                <p className="font-semibold">Box Breathing</p>
-                <p className="text-[11px] opacity-80 mt-0.5">Steady, even breaths</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTool('grounding_54321')}
-                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                  selectedTool === 'grounding_54321'
-                    ? 'bg-green-600 text-white border-green-600 shadow-md'
-                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                }`}
-              >
-                <p className="font-semibold">5-4-3-2-1</p>
-                <p className="text-[11px] opacity-80 mt-0.5">Grounding senses</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTool('body_scan')}
-                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                  selectedTool === 'body_scan'
-                    ? 'bg-green-600 text-white border-green-600 shadow-md'
-                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                }`}
-              >
-                <p className="font-semibold">Body Scan</p>
-                <p className="text-[11px] opacity-80 mt-0.5">Release tension</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTool('pmr')}
-                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                  selectedTool === 'pmr'
-                    ? 'bg-green-600 text-white border-green-600 shadow-md'
-                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                }`}
-              >
-                <p className="font-semibold">Muscle Relax</p>
-                <p className="text-[11px] opacity-80 mt-0.5">Progressive softening</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTool('safe_place')}
-                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                  selectedTool === 'safe_place'
-                    ? 'bg-green-600 text-white border-green-600 shadow-md'
-                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                }`}
-              >
-                <p className="font-semibold">Safe Place</p>
-                <p className="text-[11px] opacity-80 mt-0.5">Mental sanctuary</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTool('self_compassion')}
-                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                  selectedTool === 'self_compassion'
-                    ? 'bg-green-600 text-white border-green-600 shadow-md'
-                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                }`}
-              >
-                <p className="font-semibold">Self-Compassion</p>
-                <p className="text-[11px] opacity-80 mt-0.5">Kind self-talk</p>
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-4 shadow-sm border border-emerald-100 flex-1 overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">
-                Mind Patterns Wiki
-              </h4>
-              <Icons.Brain className="w-4 h-4 text-emerald-500" />
-            </div>
-            <p className="text-[11px] text-slate-600 mb-3">
-              These are common patterns Bremi may highlight during chat. Tap any one to read why it
-              happens biologically and what can help.
-            </p>
-            <div className="space-y-2 overflow-y-auto max-h-64 pr-1">
-              {PSYCHO_WIKI.map((entry) => (
-                <button
-                  key={entry.id}
-                  type="button"
-                  onClick={() => setActiveWikiEntry(entry)}
-                  className="w-full text-left text-xs bg-emerald-50/80 border border-emerald-100 rounded-2xl px-3 py-2.5 hover:bg-emerald-100 transition-colors flex items-start gap-2"
-                >
-                  <span className="mt-0.5">
-                    <Icons.Sparkles className="w-3 h-3 text-emerald-500" />
-                  </span>
-                  <span>
-                    <span className="font-semibold block">{entry.label}</span>
-                    <span className="text-[11px] text-emerald-900/90 line-clamp-2">
-                      {entry.shortDescription}
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1034,7 +930,41 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
               ) : (
                 <>
                   <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+                      <span>Formatting</span>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => insertAtCursor('**bold**')}
+                          className="px-2 py-0.5 rounded-md border border-slate-200 text-[10px] font-semibold text-slate-700 bg-white hover:bg-slate-50"
+                        >
+                          B
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertAtCursor('# ')}
+                          className="px-2 py-0.5 rounded-md border border-slate-200 text-[10px] font-semibold text-slate-700 bg-white hover:bg-slate-50"
+                        >
+                          H1
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertAtCursor('## ')}
+                          className="px-2 py-0.5 rounded-md border border-slate-200 text-[10px] font-semibold text-slate-700 bg-white hover:bg-slate-50"
+                        >
+                          H2
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertAtCursor('- ')}
+                          className="px-2 py-0.5 rounded-md border border-slate-200 text-[10px] font-semibold text-slate-700 bg-white hover:bg-slate-50"
+                        >
+                          •
+                        </button>
+                      </div>
+                    </div>
                     <textarea
+                      ref={journalTextareaRef}
                       value={newJournalText}
                       onChange={(e) => setNewJournalText(e.target.value)}
                       className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/40 min-h-[80px]"
@@ -1071,7 +1001,34 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
                             <div className="text-[10px] text-slate-400 mb-1">
                               {new Date(entry.createdAt).toLocaleString()}
                             </div>
-                            <p className="whitespace-pre-wrap">{entry.text}</p>
+                            {(() => {
+                              const isExpanded = !!expandedEntries[entry.id];
+                              const maxLen = 220;
+                              const needsTruncate = entry.text.length > maxLen;
+                              const displayText =
+                                isExpanded || !needsTruncate
+                                  ? entry.text
+                                  : entry.text.slice(0, maxLen) + '…';
+                              return (
+                                <>
+                                  <p className="whitespace-pre-wrap">{displayText}</p>
+                                  {needsTruncate && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setExpandedEntries((prev) => ({
+                                          ...prev,
+                                          [entry.id]: !isExpanded,
+                                        }))
+                                      }
+                                      className="mt-1 text-[10px] font-semibold text-slate-600 underline underline-offset-2"
+                                    >
+                                      {isExpanded ? 'Show less' : 'Read more'}
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         ))}
                       </div>
