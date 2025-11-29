@@ -8,6 +8,7 @@ import { PSYCHO_WIKI, PsychoWikiEntry } from '../psychoWiki';
 
 const JOURNAL_PIN_KEY = 'bremi_journal_pin_v1';
 const JOURNAL_DATA_KEY = 'bremi_journal_entries_v1';
+const MAX_PIN_ATTEMPTS = 5;
 
 interface JournalEntry {
   id: string;
@@ -58,6 +59,7 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
   const [expandedEntries, setExpandedEntries] = useState<Record<string, boolean>>({});
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
+  const [pinAttempts, setPinAttempts] = useState(0);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
@@ -291,6 +293,7 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
     setJournalError(null);
     if (!journalPinHash) {
       setJournalUnlocked(true);
+      setPinAttempts(0);
       return;
     }
     try {
@@ -298,13 +301,40 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
       if (hash === journalPinHash) {
         setJournalUnlocked(true);
         setPinInput('');
+        setPinAttempts(0);
       } else {
-        setJournalError('Incorrect PIN. Please try again.');
+        setPinAttempts((prev) => prev + 1);
+        if (pinAttempts + 1 >= MAX_PIN_ATTEMPTS) {
+          setJournalError(
+            'Too many incorrect attempts. To protect your privacy, you can reset this journal (this clears existing notes) and set a new PIN.'
+          );
+        } else {
+          setJournalError('Incorrect PIN. Please try again.');
+        }
       }
     } catch (e) {
       console.error('Failed to verify PIN', e);
       setJournalError('Something went wrong while verifying your PIN.');
     }
+  };
+
+  const handleResetJournal = () => {
+    try {
+      localStorage.removeItem(JOURNAL_PIN_KEY);
+      localStorage.removeItem(JOURNAL_DATA_KEY);
+    } catch (e) {
+      console.error('Failed to reset journal storage', e);
+    }
+    setJournalEntries([]);
+    setJournalPinHash(null);
+    setJournalUnlocked(false);
+    setEditingEntryId(null);
+    setEditingText('');
+    setPinInput('');
+    setNewPin('');
+    setConfirmPin('');
+    setPinAttempts(0);
+    setJournalError(null);
   };
 
   const insertAtCursor = (snippet: string) => {
@@ -502,135 +532,135 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
             <div className="p-4 md:p-6 overflow-y-auto flex-1 bg-green-50/40">
               <div className="grid grid-cols-1 md:grid-cols-[2fr,1.5fr] gap-4 md:gap-6">
                 {/* Reuse main exercise area */}
-                <div className="flex flex-col items-center justify-center bg-gradient-to-b from-green-100/60 to-green-50 rounded-3xl p-4 md:p-6 shadow-sm border border-green-100/70">
-                  <div className="flex items-center justify-between w-full mb-4">
-                    <h3 className="text-lg font-semibold text-green-900">
-                      {selectedTool === '478_breathing' && '4-7-8 Breathing Calm'}
-                      {selectedTool === 'box_breathing' && 'Box Breathing Reset'}
-                      {selectedTool === 'grounding_54321' && '5–4–3–2–1 Grounding'}
-                      {selectedTool === 'body_scan' && 'Gentle Body Scan'}
-                      {selectedTool === 'pmr' && 'Progressive Muscle Relaxation'}
-                      {selectedTool === 'safe_place' && 'Safe Place Visualisation'}
-                      {selectedTool === 'self_compassion' && 'Self-Compassion Break'}
-                    </h3>
-                    <button
-                      onClick={() => speakGuide(selectedTool, getGuideText())}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-white/70 text-green-800 border border-green-200 hover:bg-white transition-colors shadow-sm"
-                    >
-                      {activeAudioId === selectedTool ? (
-                        <>
-                          <Icons.X className="w-3.5 h-3.5" />
-                          <span>Stop</span>
-                        </>
-                      ) : (
-                        <>
-                          <Icons.Speaker className="w-3.5 h-3.5" />
-                          <span>Guided voice</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+        <div className="flex flex-col items-center justify-center bg-gradient-to-b from-green-100/60 to-green-50 rounded-3xl p-4 md:p-6 shadow-sm border border-green-100/70">
+          <div className="flex items-center justify-between w-full mb-4">
+            <h3 className="text-lg font-semibold text-green-900">
+              {selectedTool === '478_breathing' && '4-7-8 Breathing Calm'}
+              {selectedTool === 'box_breathing' && 'Box Breathing Reset'}
+              {selectedTool === 'grounding_54321' && '5–4–3–2–1 Grounding'}
+              {selectedTool === 'body_scan' && 'Gentle Body Scan'}
+              {selectedTool === 'pmr' && 'Progressive Muscle Relaxation'}
+              {selectedTool === 'safe_place' && 'Safe Place Visualisation'}
+              {selectedTool === 'self_compassion' && 'Self-Compassion Break'}
+            </h3>
+            <button
+              onClick={() => speakGuide(selectedTool, getGuideText())}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-white/70 text-green-800 border border-green-200 hover:bg-white transition-colors shadow-sm"
+            >
+              {activeAudioId === selectedTool ? (
+                <>
+                  <Icons.X className="w-3.5 h-3.5" />
+                  <span>Stop</span>
+                </>
+              ) : (
+                <>
+                  <Icons.Speaker className="w-3.5 h-3.5" />
+                  <span>Guided voice</span>
+                </>
+              )}
+            </button>
+          </div>
 
                   {/* We keep the same body as main area, but rely on current selectedTool blocks */}
                   {/* To avoid duplication, show a short hint instead of re-implementing all steps */}
-                  <p className="text-xs text-green-900/80 max-w-sm text-center">
+              <p className="text-xs text-green-900/80 max-w-sm text-center">
                     Use the tool picker on the right to change the exercise. The main Relax screen
                     will update to match your choice.
-                  </p>
-                </div>
+              </p>
+            </div>
 
                 {/* Calm Tools picker */}
-                <div className="bg-white rounded-3xl p-4 shadow-sm border border-green-100">
-                  <h4 className="text-xs font-semibold text-green-800 uppercase tracking-wider mb-2">
-                    Calm Tools
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTool('478_breathing')}
-                      className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                        selectedTool === '478_breathing'
-                          ? 'bg-green-600 text-white border-green-600 shadow-md'
-                          : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                      }`}
-                    >
-                      <p className="font-semibold">4-7-8 Breathing</p>
-                      <p className="text-[11px] opacity-80 mt-0.5">Nervous system reset</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTool('box_breathing')}
-                      className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                        selectedTool === 'box_breathing'
-                          ? 'bg-green-600 text-white border-green-600 shadow-md'
-                          : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                      }`}
-                    >
-                      <p className="font-semibold">Box Breathing</p>
-                      <p className="text-[11px] opacity-80 mt-0.5">Steady, even breaths</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTool('grounding_54321')}
-                      className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                        selectedTool === 'grounding_54321'
-                          ? 'bg-green-600 text-white border-green-600 shadow-md'
-                          : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                      }`}
-                    >
-                      <p className="font-semibold">5-4-3-2-1</p>
-                      <p className="text-[11px] opacity-80 mt-0.5">Grounding senses</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTool('body_scan')}
-                      className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                        selectedTool === 'body_scan'
-                          ? 'bg-green-600 text-white border-green-600 shadow-md'
-                          : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                      }`}
-                    >
-                      <p className="font-semibold">Body Scan</p>
-                      <p className="text-[11px] opacity-80 mt-0.5">Release tension</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTool('pmr')}
-                      className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                        selectedTool === 'pmr'
-                          ? 'bg-green-600 text-white border-green-600 shadow-md'
-                          : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                      }`}
-                    >
-                      <p className="font-semibold">Muscle Relax</p>
-                      <p className="text-[11px] opacity-80 mt-0.5">Progressive softening</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTool('safe_place')}
-                      className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                        selectedTool === 'safe_place'
-                          ? 'bg-green-600 text-white border-green-600 shadow-md'
-                          : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                      }`}
-                    >
-                      <p className="font-semibold">Safe Place</p>
-                      <p className="text-[11px] opacity-80 mt-0.5">Mental sanctuary</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTool('self_compassion')}
-                      className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
-                        selectedTool === 'self_compassion'
-                          ? 'bg-green-600 text-white border-green-600 shadow-md'
-                          : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
-                      }`}
-                    >
-                      <p className="font-semibold">Self-Compassion</p>
-                      <p className="text-[11px] opacity-80 mt-0.5">Kind self-talk</p>
-                    </button>
-                  </div>
-                </div>
+          <div className="bg-white rounded-3xl p-4 shadow-sm border border-green-100">
+            <h4 className="text-xs font-semibold text-green-800 uppercase tracking-wider mb-2">
+              Calm Tools
+            </h4>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedTool('478_breathing')}
+                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
+                  selectedTool === '478_breathing'
+                    ? 'bg-green-600 text-white border-green-600 shadow-md'
+                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
+                }`}
+              >
+                <p className="font-semibold">4-7-8 Breathing</p>
+                <p className="text-[11px] opacity-80 mt-0.5">Nervous system reset</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTool('box_breathing')}
+                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
+                  selectedTool === 'box_breathing'
+                    ? 'bg-green-600 text-white border-green-600 shadow-md'
+                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
+                }`}
+              >
+                <p className="font-semibold">Box Breathing</p>
+                <p className="text-[11px] opacity-80 mt-0.5">Steady, even breaths</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTool('grounding_54321')}
+                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
+                  selectedTool === 'grounding_54321'
+                    ? 'bg-green-600 text-white border-green-600 shadow-md'
+                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
+                }`}
+              >
+                <p className="font-semibold">5-4-3-2-1</p>
+                <p className="text-[11px] opacity-80 mt-0.5">Grounding senses</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTool('body_scan')}
+                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
+                  selectedTool === 'body_scan'
+                    ? 'bg-green-600 text-white border-green-600 shadow-md'
+                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
+                }`}
+              >
+                <p className="font-semibold">Body Scan</p>
+                <p className="text-[11px] opacity-80 mt-0.5">Release tension</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTool('pmr')}
+                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
+                  selectedTool === 'pmr'
+                    ? 'bg-green-600 text-white border-green-600 shadow-md'
+                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
+                }`}
+              >
+                <p className="font-semibold">Muscle Relax</p>
+                <p className="text-[11px] opacity-80 mt-0.5">Progressive softening</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTool('safe_place')}
+                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
+                  selectedTool === 'safe_place'
+                    ? 'bg-green-600 text-white border-green-600 shadow-md'
+                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
+                }`}
+              >
+                <p className="font-semibold">Safe Place</p>
+                <p className="text-[11px] opacity-80 mt-0.5">Mental sanctuary</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTool('self_compassion')}
+                className={`text-left text-xs rounded-2xl px-3 py-3 border transition-all ${
+                  selectedTool === 'self_compassion'
+                    ? 'bg-green-600 text-white border-green-600 shadow-md'
+                    : 'bg-green-50 text-green-900 border-green-100 hover:bg-green-100'
+                }`}
+              >
+                <p className="font-semibold">Self-Compassion</p>
+                <p className="text-[11px] opacity-80 mt-0.5">Kind self-talk</p>
+              </button>
+            </div>
+          </div>
               </div>
             </div>
           </div>
@@ -645,7 +675,7 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
               <div className="flex items-center gap-3">
                 <div className="bg-white/10 p-2 rounded-lg">
                   <Icons.Brain className="w-5 h-5 text-emerald-300" />
-                </div>
+            </div>
                 <div>
                   <h3 className="font-bold text-lg">Mind Patterns Wiki</h3>
                   <p className="text-xs text-emerald-200">Short psycho-education cards</p>
@@ -661,35 +691,35 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
 
             <div className="p-6 overflow-y-auto space-y-4 bg-gray-50/60">
               <p className="text-[11px] text-slate-600">
-                These are common patterns Bremi may highlight during chat. Tap any one to read why it
-                happens biologically and what can help.
-              </p>
+              These are common patterns Bremi may highlight during chat. Tap any one to read why it
+              happens biologically and what can help.
+            </p>
               <div className="space-y-2">
-                {PSYCHO_WIKI.map((entry) => (
-                  <button
-                    key={entry.id}
-                    type="button"
+              {PSYCHO_WIKI.map((entry) => (
+                <button
+                  key={entry.id}
+                  type="button"
                     onClick={() => {
                       setActiveWikiEntry(entry);
                       setShowMindModal(false);
                     }}
-                    className="w-full text-left text-xs bg-emerald-50/80 border border-emerald-100 rounded-2xl px-3 py-2.5 hover:bg-emerald-100 transition-colors flex items-start gap-2"
-                  >
-                    <span className="mt-0.5">
-                      <Icons.Sparkles className="w-3 h-3 text-emerald-500" />
+                  className="w-full text-left text-xs bg-emerald-50/80 border border-emerald-100 rounded-2xl px-3 py-2.5 hover:bg-emerald-100 transition-colors flex items-start gap-2"
+                >
+                  <span className="mt-0.5">
+                    <Icons.Sparkles className="w-3 h-3 text-emerald-500" />
+                  </span>
+                  <span>
+                    <span className="font-semibold block">{entry.label}</span>
+                    <span className="text-[11px] text-emerald-900/90 line-clamp-2">
+                      {entry.shortDescription}
                     </span>
-                    <span>
-                      <span className="font-semibold block">{entry.label}</span>
-                      <span className="text-[11px] text-emerald-900/90 line-clamp-2">
-                        {entry.shortDescription}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-              </div>
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
+      </div>
       )}
 
       {/* Safe Journaling Modal */}
@@ -734,6 +764,15 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
                       />
                       {journalError && (
                         <p className="text-[11px] text-red-600 mt-1">{journalError}</p>
+                      )}
+                      {pinAttempts >= MAX_PIN_ATTEMPTS && (
+                        <button
+                          type="button"
+                          onClick={handleResetJournal}
+                          className="mt-2 w-full border border-red-200 text-red-700 text-[10px] font-semibold rounded-xl py-2 hover:bg-red-50 transition-colors"
+                        >
+                          Reset journal and set new PIN (clears existing notes)
+                        </button>
                       )}
                       <button
                         onClick={handleUnlockJournal}
@@ -850,8 +889,37 @@ export const Relaxation: React.FC<RelaxationProps> = ({ language }) => {
                             key={entry.id}
                             className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-800"
                           >
-                            <div className="text-[10px] text-slate-400 mb-1">
-                              {new Date(entry.createdAt).toLocaleString()}
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="text-[10px] text-slate-400">
+                                {new Date(entry.createdAt).toLocaleString()}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = journalEntries.filter((e) => e.id !== entry.id);
+                                  setJournalEntries(updated);
+                                  setExpandedEntries((prev) => {
+                                    const next = { ...prev };
+                                    delete next[entry.id];
+                                    return next;
+                                  });
+                                  if (editingEntryId === entry.id) {
+                                    setEditingEntryId(null);
+                                    setEditingText('');
+                                  }
+                                  try {
+                                    localStorage.setItem(
+                                      JOURNAL_DATA_KEY,
+                                      JSON.stringify(updated)
+                                    );
+                                  } catch (err) {
+                                    console.error('Failed to delete journal entry', err);
+                                  }
+                                }}
+                                className="text-[10px] text-red-500 hover:text-red-600 underline underline-offset-2"
+                              >
+                                Delete
+                              </button>
                             </div>
                             {editingEntryId === entry.id ? (
                               <div className="space-y-2 mt-1">
