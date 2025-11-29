@@ -143,8 +143,8 @@ function AppContent() {
         </div>
       )}
 
-      {/* Navigation Bar - Only show if logged in and not in onboarding or fullscreen feature views */}
-      {currentView !== 'onboarding' && !showEmergency && currentView !== 'whatsapp-coming-soon' && user && (
+      {/* Navigation Bar - Only show if logged in and not in onboarding, tour, or fullscreen feature views */}
+      {currentView !== 'onboarding' && !showEmergency && !showTour && currentView !== 'whatsapp-coming-soon' && user && (
         <Navigation
           currentView={currentView}
           onChangeView={setCurrentView}
